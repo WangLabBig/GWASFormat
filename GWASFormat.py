@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-'''
+"""
 @Description:       :
-@Date     :2023/08/10 18:55:10
+@Date     :2023/08/15 10:33:39
 @Author      :Tingfeng Xu
 @version      :1.0
-'''
-import time 
-start = time.time()
+"""
+# import time
+# start = time.time()
 
 
 import argparse
+from re import A
 import sys
 import warnings
 import textwrap
 from signal import SIG_DFL, SIGPIPE, signal
-
 
 
 warnings.filterwarnings("ignore")
@@ -23,25 +23,6 @@ signal(
     SIGPIPE, SIG_DFL
 )  # prevent IOError: [Errno 32] Broken pipe. If pipe closed by 'head'.
 
-column_mapping = {
-    "chromosome": None,
-    "position": None,
-    "ref": None,
-    "alt": None,
-    "pval": None,
-    "maf": None,
-    "af": None,
-    "case_af": None,
-    "control_af": None,
-    "ac": None,
-    "beta": None,
-    "sebeta": None,
-    "or": None,
-    "r2": None,
-    "num_samples": None,
-    "num_controls": None,
-    "num_cases": None
-}
 
 def getParser():
     parser = argparse.ArgumentParser(
@@ -51,154 +32,256 @@ def getParser():
         %prog Set/Replace ID for any file. setID as : chr:pos:ref:alt
         @Author: xutingfeng@big.ac.cn
 
+        GWAS SSF: https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1
+        GWAS Standard
+
         Version: 1.0
-        Example:zcat _crp.regenie.gz| pheweb_format.py -i 1 2 4 5 6 --log10P --beta '-5' --sebeta '-4' --af 6 --num_samples 7 | column -t
+        
+        Example Code:
 
+        1. specific column index and format all 
+            cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9
+        2. specific beta is hazard ratio and pval is log10p; --pval_type log10p/pval --effect_type hazard_ratio/beta/odds_ratio
+            cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --pval_type log10p --effect_type odds_ratio
+        3. spcific other columns
+         cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4
 
-        Ohter format
-            | Column Description                        | Name         | Command Line Argument | Other Allowed Column Names | Allowed Values                                        |
-            |-------------------------------------------|--------------|-----------------------|----------------------------|--------------------------------------------------------|
-            | Minor Allele Frequency                    | maf          | --maf                 |                            | Number in (0, 0.5]                                    |
-            | Allele Frequency (of Alternate Allele)    | af           | --af                  | a1freq, frq                | Number in (0, 1)                                      |
-            | AF among Cases                            | case_af      | --case_af             | af.cases                   | Number in (0, 1)                                      |
-            | AF among Controls                         | control_af   | --control_af          | af.controls                | Number in (0, 1)                                      |
-            | Allele Count                              | ac           | --ac                  |                            | Integer                                              |
-            | Effect Size (of Alternate Allele)         | beta         | --beta                |                            | Number                                               |
-            | Standard Error of Effect Size             | sebeta       | --sebeta              | se                         | Number                                               |
-            | Odds Ratio (of Alternate Allele)          | or           | --or                  |                            | Number                                               |
-            | R2                                        | r2           | --r2                  |                            | Number                                               |
-            | Number of Samples                         | num_samples  | --num_samples         | ns, n                      | Integer, must be the same for every variant in its phenotype |
-            | Number of Controls                        | num_controls | --num_controls        | ns.ctrl, n_controls         | Integer, must be the same for every variant in its phenotype |
-            | Number of Cases                           | num_cases    | --num_cases           | ns.case, n_cases            | Integer, must be the same for every variant in its phenotype |
         """
         ),
     )
-    parser.add_argument("-i", "--col", dest="col_indices", default=[], type=int, nargs= "+", help="Specify the columns of chrom pos EA OA beta se EA_freq pval v_id rsid ref_allele columns start from 1")
-
-
-    # parser.add_argument("--log10P", dest="log10P", action="store_true", help="--log10P will think pval is log10P and convert it to pval")
-    # parser.add_argument("--maf", dest="maf", type=int, help="Minor Allele Frequency. Number in (0, 0.5].")
-    # parser.add_argument("--af", dest="af", type=int, help="Allele Frequency (of Alternate Allele). Number in (0, 1).")
-    # parser.add_argument("--case_af", dest="case_af", type=int, help="AF among Cases. Number in (0, 1).")
-    # parser.add_argument("--control_af", dest="control_af", type=int, help="AF among Controls. Number in (0, 1).")
-    # parser.add_argument("--ac", dest="ac", type=int, help="Allele Count. Integer.")
-    # parser.add_argument("--beta", dest="beta", type=int, help="Effect Size (of Alternate Allele). Number.")
-    # parser.add_argument("--sebeta", dest="sebeta", type=int, help="Standard Error of Effect Size. Number.")
-    # parser.add_argument("--or", dest="or_", type=int, help="Odds Ratio (of Alternate Allele). Number.")  # 'or' is a keyword, so I changed it to 'or_'
-    # parser.add_argument("--r2", dest="r2", type=int, help="R2. Number.")
-    # parser.add_argument("--num_samples", dest="num_samples", type=int, help="Number of Samples. Integer, must be the same for every variant in its phenotype.")
-    # parser.add_argument("--num_controls", dest="num_controls", type=int, help="Number of Controls. Integer, must be the same for every variant in its phenotype.")
-    # parser.add_argument("--num_cases", dest="num_cases", type=int, help="Number of Cases. Integer, must be the same for every variant in its phenotype.")
-
+    parser.add_argument(
+        "-i",
+        "--col",
+        dest="col_indices",
+        default=[],
+        type=int,
+        nargs="+",
+        help="Specify the columns of chrom pos effect_allele(EA) other_allele(OA) beta se EA_freq pval columns start from 1. If you want to skip a column, just set it to 0.",
+        required=True,
+    )
+    parser.add_argument(
+        "-d",
+        "--delimter",
+        dest="delimter",
+    )
+    parser.add_argument(
+        "--pval_type",
+        dest="pval_type",
+        default="pval",
+        choices=["pval", "log10p"],
+        help="column 8 in output File type, default: pval, should be one of pval, log10p",
+    )
+    parser.add_argument(
+        "--effect_type",
+        dest="effect_type",
+        default="beta",
+        choices=["beta", "odds_ratio", "hazard_ratio"],
+        help="column 5 in output File type, default: beta, should be one of beta, odds_ratio, hazard_ratio",
+    )
+    parser.add_argument(
+        "--ci_upper",
+        dest="ci_upper",
+        type=int,
+        help="Upper bound of confidence interval. Number of col index, optioanl",
+        required=False,
+    )
+    parser.add_argument(
+        "--ci_lower",
+        dest="ci_lower",
+        type=int,
+        help="Lower bound of confidence interval. Number of col index, optional",
+        required=False,
+    )
+    parser.add_argument(
+        "--rsid",
+        dest="rsid",
+        type=int,
+        help="rsid. Number of col index, optional",
+        required=False,
+    )
+    parser.add_argument(
+        "--variant_id",
+        dest="variant_id",
+        type=int,
+        help="variant_id. Number of col index, optional",
+        required=False,
+    )
+    parser.add_argument(
+        "--info",
+        dest="info",
+        type=int,
+        help="Imputation information metric. Number of col index, optional",
+        required=False,
+    )
+    parser.add_argument(
+        "--ref_allele",
+        dest="ref_allele",
+        type=int,
+        help="ref_allele. Number of col index, optional",
+        required=False,
+    )
+    parser.add_argument(
+        "-n",
+        dest="n",
+        type=int,
+        help="Number of samples. Number of col index, optional",
+        required=False,
+    )
+    parser.add_argument(
+        "--other_col",
+        dest="other_col",
+        type=int,
+        default=[],
+        nargs="+",
+        help="Other columns. Number of col index, optional",
+        required=False,
+    )
     return parser
 
+
 def formatChr(x, nochr=False):
+    x = x.lower()
     if x.startswith("chr"):
-        return x
-    elif x.isdigit():
-        if int(x) < 23:
-            return "chr" + str(int(x))
-        else:
-            if x == "23":
-                return "chrX"
-            elif x == "24":
-                return "chrY"
-            elif x == "25":
-                return "chrX"
-            elif x == "26":
-                return "chrMT"
+        x = x.lstrip("chr")
+    if x == "x":
+        x = "23"
+    elif x == "y":
+        x = "24"
+    elif x == "mt":
+        x = "25"
     else:
-        return x
+        raise ValueError(f"Unknown chromosome: {x}")
+    return x
 
 
-# def resetID(line, orderList, IncludeOld=False, is_sort=False, delimter=None,addChr=False):
-#     """
-#     reset ID for any file.
-#     setID as : chr:pos:ref:alt
-#     return
-#     """
-#     # output results.
-#     ss = line.split(delimter)
-    
-#     # orderList should contain at least one element, which is ID col
-#     if len(orderList) ==1:
-#         idCol = orderList[0]
-#         oldID = ss[idCol]
-#         chr, pos, A0, A1 = oldID.split(':') # this time A0 and A1 is not sure, and this mode should work for --sort or --add-chr or do nothing 
-#     else:
-#         idCol, chrCol, posCol, refCol, altCol = orderList
 
-#         oldID, chr, pos, A0, A1 = ss[idCol], ss[chrCol], ss[posCol], ss[refCol], ss[altCol] # this time A0 is REF and A1 is ALT; this work for rename ID 
-    
-#     if is_sort:
-#         stemp = sorted([A0, A1])
-#     else:
-#         stemp = [A0, A1]
 
-#     # if addChr:
-#     chr = formatChr(chr, not addChr) # addChr is True, then nochr is False, so formatChr will add chr for chr col of ID
+def header_mapper(idx_or_str, header_col):
+    if isinstance(idx_or_str, str):
+        string = idx_or_str
+        idx = header_col.index(string) + 1
+    elif isinstance(idx_or_str, int):
+        idx = idx_or_str
+        if idx < 0:
+            idx = len(header_col) + idx + 1
+    else:
+        idx = None
+    return idx
 
-#     newID = chr + ':' + pos + ':' + stemp[0] + ':' + stemp[1]
-#     if IncludeOld:  # 是否包含oldID
-#         newID = newID + ':' + oldID  
-#     # 更新到ss中
-#     ss[idCol] = newID
-
-#     if delimter is None:
-#         outputDelimter = "\t"
-#     else:
-#         outputDelimter = delimter
-#     return outputDelimter.join(ss)
-#     # sys.stdout.write('%s\n'%('\t'.join([ss[x] for x in idIndex])))
-
-def turn1to0(x):
-    if x >=0: # 1=>0 2=>1 
-        return x-1
-    else: # -5 => -5 不变
-        return x
 
 if __name__ == "__main__":
     parser = getParser()
     args = parser.parse_args()
-    column_mapping = {
+    # see gwas-ssf_v1.0.0.pdf: https://github.com/EBISPOT/gwas-summary-statistics-standard
+
+    # parse args
+    pval_type = args.pval_type
+    if pval_type == "log10p":
+        pval_type = "minus_log10_p_value"
+    elif pval_type == "pval":
+        pval_type = "p_value"
+    effect_type = args.effect_type
+    delimter = args.delimter
+
+    # get fields
+    Mandatory_fields = {
         "chromosome": None,
         "base_pair_location": None,
         "effect_allele": None,
         "other_allele": None,
-        "beta": None,
+        effect_type: None,
         "standard_error": None,
         "effect_allele_frequency": None,
-        "p_value": None,
-        "variant_id": None,
+        pval_type: None,
+        # "variant_id": None,
+        # "rsid": None,
+        # "ref_allele": None,
+    }
+    Encouraged_fields = {
+        "ci_upper": None,
+        "ci_lower": None,
         "rsid": None,
+        "variant_id": None,
+        "info": None,
         "ref_allele": None,
-        # "sebeta": None,
-        # "or": None,
-        # "r2": None,
-        # "num_samples": None,
-        # "num_controls": None,
-        # "num_cases": None
+        "n": None,
     }
 
-    chr, pos, ea, oa, beta, se, ea_freq, pval, v_id, rsid, ref_allele = [i for i in args.col_indices]
+    default_col_indices = args.col_indices
+    if len(default_col_indices) != 8:
+        raise ValueError(
+            "col_indices should containing 8 value, this means that you should specific these cols index: chromosome, base_pair_location, effect_allele, other_allele, beta/odds_ration/hazard_ratio, standard_error, effect_allele_frequency, p_value/minus_log10_p_value"
+        )
 
-    for key, key_idx in zip(column_mapping.keys(), args.col_indices):
-        if key_idx !=0:
-            column_mapping[key] = key_idx
-            
-    delimter = None 
+    chr, pos, ea, oa, beta, se, ea_freq, pval = [i for i in default_col_indices]
+
+    for key, key_idx in zip(Mandatory_fields.keys(), args.col_indices):
+        if key_idx != 0:
+            Mandatory_fields[key] = key_idx
+    # for optional parameters
+    for key, key_idx in zip(
+        Encouraged_fields.keys(),
+        [
+            args.ci_upper,
+            args.ci_lower,
+            args.rsid,
+            args.variant_id,
+            args.info,
+            args.ref_allele,
+            args.n,
+        ],
+    ):
+        if key_idx != 0:
+            Mandatory_fields[key] = key_idx
+
+    column_mapping = {}
+    column_mapping.update(Mandatory_fields)
+    column_mapping.update(Encouraged_fields)
 
     line_idx = 1
     for line in sys.stdin:
-        ss = line.split(delimter) 
+        ss = line.split(delimter)
 
-        if line_idx ==1:
+        if line_idx == 1:
+            # get user specified column index
+            raw_header = ss
+            # map column_mapping keys to index
+            column_mapping = {
+                key: header_mapper(key_idx, raw_header)
+                for key, key_idx in column_mapping.items()
+            }
+
+            if args.other_col:
+                other_col_indices = [
+                    header_mapper(i, raw_header) for i in args.other_col
+                ]
+                user_defined_dict = {
+                    ss[key_idx - 1]: key_idx for key_idx in other_col_indices
+                }
+                if (
+                    len(
+                        conflict := set(user_defined_dict.keys()).intersection(
+                            set(column_mapping.keys())
+                        )
+                    )
+                    > 0
+                ):  # avoid conflict columns between user defined and default
+                    conflict_list = ",".join(conflict)
+                    raise ValueError(
+                        f"User defined column index has conflict with default column index. {conflict_list}"
+                    )
+
+                column_mapping.update(user_defined_dict)
+            # update header
             formated_ss = [key for key, key_idx in column_mapping.items()]
         else:
-            formated_ss = [ss[key_idx -1 ] if key_idx !=0 else "#NA"  for key, key_idx in column_mapping.items()]
+            formated_ss = [
+                ss[key_idx - 1] if key_idx is not None else "#NA"
+                for key, key_idx in column_mapping.items()
+            ]
 
-        formated_ss = "\t".join(formated_ss) # \t delimter
-        
+        formated_ss = "\t".join(formated_ss)  # \t delimter
+
         sys.stdout.write(f"{formated_ss}\n")
         line_idx += 1
 
@@ -207,8 +290,13 @@ sys.stdout.close()
 sys.stderr.flush()
 sys.stderr.close()
 
-end = time.time()
-time_str = "time elapsed: {:.2f} /min".format((end - start) / 60)
+# end = time.time()
+# time_str = "time elapsed: {:.2f} /min".format((end - start) / 60)
 
-with open("time.log", "w") as f:
-    f.write(time_str)
+# with open("time.log", "w") as f:
+#     f.write(time_str)
+
+# zcat xxx.tsv | format.py -i 1 2 3 4 5 6 7 --beta haz --pval_type log10p --variant_id 9 --other_col 21 22 "test"  | match_rsid.py -col 4 -c rsid | ref_match.py -col 4 -r GRCh37.fasta.gz | bgzip > xxx.formated.tsv.gz
+
+# Example Code:
+#     zcat xxx.tsv | format.py -i 1 2 3 4 5 6 7 --beta haz --pval_type log10p --variant_id 9 --other_col 21 22 "test"  | match_rsid.py -col 4 -c rsid | ref_match.py -col 4 -r GRCh37.fasta.gz | bgzip > xxx.formated.tsv.gz
