@@ -246,8 +246,7 @@ GWAS SSF 版本: GWAS-SSF v0.1
 这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀。
 
 3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`
-
-这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀，同时使用'_'作为分隔符。
+4. 这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀，同时使用'_'作为分隔符。
 
 **选项:**
 
