@@ -86,8 +86,23 @@ GWAS-Summary-Statistics/
 
 ## Usage
 
+### Installation
+
+**Requirments**: `python>3.7`
+
+下载源码
+
+`git clone git@github.com:WangLabBig/GWASFormat.git`
+
+
+
+直接添加`scripts`到环境变量
+
+`export PATH=$PATH:yourpath/scripts`
+
+### Pipline
+
 代码存放于[Wanglab_GWASFormat](https://github.com/WangLabBig/GWASFormat)，本地服务器路径如下：
-1. 
 
 >[详细参数介绍](#API)
 
