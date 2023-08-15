@@ -236,7 +236,7 @@ GWAS SSF 版本: GWAS-SSF v0.1
 
 默认情况下，假设输入文件包含标题。
 - `-s` 选项会使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序。默认情况下不进行排序。
-- `-k` 选项会保留原始ID，并使用 `-I/--id-delimter` 作为分隔符将其附加在新ID之后（默认为':'）。
+- `-k` 选项会保留原始ID，并使用 `-I/--id-delimter` 作为分隔符将其附加在新ID之后（默认为':'），且会添加 `_sorted_alleles`到原始的列名之后。
 - `-d` 选项用于指定输入文件的分隔符（默认为任意空白字符）。
 - `--add-chr` 选项会在ID的chr列添加'chr'前缀，以保留或添加'chr'到ID中。
 
@@ -256,7 +256,7 @@ GWAS SSF 版本: GWAS-SSF v0.1
 - `-i COL_ORDER [COL_ORDER ...]`, `--col_order COL_ORDER [COL_ORDER ...]`:
 指定ID、chr、pos、ref、alt的列顺序。默认为ID列=2，chr列=1，pos列=4，ref列=5，alt列=6。列索引从1开始。如果格式已经按照这个顺序排列，您可以直接使用 `-i 3` 进行后续操作。您可以在此处指定索引或列名。
 - `-k`, `--keep`: 在输出中保留原始rsID。
-- `-s`, `--sort`: 使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序。
+- `-s`, `--sort`: 使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序，并且会添加 `_sorted_alleles`到原始的列名之后
 - `-d DELIMITER`, `--delimiter DELIMITER`:
 输入文件的分隔符。默认为任意空白字符。
 - `--add-chr`: 在ID的chr列添加'chr'前缀。
