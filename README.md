@@ -9,9 +9,9 @@ meta file 部分按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-st
 1. 文件名按照我们定义
 2. meta file 中的field增加了：`url`、`reference`、`project_shortname`
 
-如果不了解文件格式[请阅读文件格式要求](#Introduction)
+如果不了解文件格式[请阅读文件格式要求](#introduction)
 
-运行代码格式化自己的数据[请阅读格式化流程](#API)
+运行代码格式化自己的数据[请阅读格式化流程](#api)
 
 WangLabGWAS数据存储路径位于文件服务器：`/data/share/wanglab/GWAS-Summary-Statistics`
 
@@ -108,17 +108,19 @@ GWAS-Summary-Statistics/
 
 运行流程建议：
 
-step1 格式化原始数据成标准格式
+step1 [GWASFormat.py](#gwasformatpy) 格式化原始数据成标准格式
 
 `cat youfile | GWASFormat.py -i 1 3 5 4 7 8 6 9 | bgzip > yourfile.tsv.gz`
 
-step2 生成meta file
+step2 使用 [generateMetaFile.py](#generatemetafilepy) 生成meta file
 
 `generateMetaFile.py -i youfile.tsv.gz`
 
 step3 (optional and coming soon) 增加ref列以及增加rsid与variant_id
 
 #### 重命名variant_id
+[resetID2.py](#resetid2py) 用于重命名variant_id
+
 `cat yourfile | resetID2.py -i variant_id 1 2 ref alt -s --add-chr`
 > **⚠️注意：** `-s` 会添加 `_sorted_alleles`到原始的列名之后
 
