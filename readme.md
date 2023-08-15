@@ -66,7 +66,7 @@ GWAS-Summary-Statistics/
 | ancestry_method              | genetically determined        | Method used to determine sample ancestry e.g. self reported/genetically determined  | Text string (multiple possible) |
 | coordinate_system            | 1-based        | Coordinate System                           | 1-based/0-based     |
 | data_file_md5sum             | c4fcf2ef404f36cd3bbb2301fda94a1c | Data file MD5 checksum                      | Alphanumeric hash  |
-| data_file_name               | cad_white_2022_GRCh37_AS | Data file name                              | Text string         |
+| data_file_name               | cad_white_2022_GRCh37_CardiogramPlusC4D | Data file name                              | Text string         |
 | date_last_modified           | 2023-08-15 | Date last modified                         | Date format ('YYYY-MM-DD') |
 | file_type                    | GWAS-SSF v0.1        | File type                                   | Text string (multiple possible) |
 | genome_assembly              | GRCh37       | Genome assembly                            | GRCh/NCBI/UCSC      |
@@ -76,12 +76,12 @@ GWAS-Summary-Statistics/
 | is_sorted                    | true         | Flag whether the file is sorted by genomic location | Boolean             |
 | minor_allele_freq_lower_limit| 0.001        | Lowest possible minor allele frequency    | Numeric             |
 | project_shortname            | AS           | Project shortname                          | Text string         |
-| reference                    | GWAS Analysis on BMI        | Reference                                   | Text string (multiple possible) |
+| reference                    | Global GWAS Meta Analysis on CAD        | Reference                                   | Text string (multiple possible) |
 | samples_ancestry             | white        | Sample ancestry                            | Text string (multiple possible) |
 | samples_size                 | 12345        | Sample size                                | Integer             |
 | sex                          | M        | Indicate if and how the study was sex-stratified | "M", "F", "combined", or "#NA" |
 | trait_description            | cad          | Author reported trait description         | Text string (multiple possible) |
-| url                          | https://csg.sph.umich.edu/willer/public/glgc-lipids2021/        | URL                                         | Text string (URL format) |
+| url                          |https://csg.sph.umich.edu/willer/public/glgc-lipids2021/results/ancestry_specific/HDL_INV_AFR_HRC_1KGP3_others_ALL.meta.singlevar.results.gz        | URL                                         | Text string (URL format) |
 
 
 ## Usage
@@ -110,7 +110,7 @@ GWAS-Summary-Statistics/
 
 step1 格式化原始数据成标准格式
 
-`cat youfile | GWASFormat.py -i 1 3 5 4 7 8 6 9 | gzip > yourfile.tsv.gz`
+`cat youfile | GWASFormat.py -i 1 3 5 4 7 8 6 9 | bgzip > yourfile.tsv.gz`
 
 step2 生成meta file
 
