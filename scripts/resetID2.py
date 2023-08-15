@@ -250,10 +250,10 @@ def resetID2(
         chr, pos, A0, A1 = oldID.split(ID_delimter)
         pass
     elif len(orderList) == 5:
-        idCol, chrCol, posCol, refCol, altCol = [
-            header_mapper(x, header) for x in orderList
-        ]
-
+        # idCol, chrCol, posCol, refCol, altCol = [
+        #     header_mapper(x, header) for x in orderList
+        # ]
+        idCol, chrCol, posCol, refCol, altCol = orderList
         oldID, chr, pos, A0, A1 = (
             ss[idCol - 1],
             ss[chrCol - 1],
@@ -302,7 +302,18 @@ if __name__ == "__main__":
     for line in sys.stdin:
         if line_idx == 1:
             header = line.split(delimter)
-            ss = line
+
+            # parse order list with col_idx or col_name
+            orderList = [header_mapper(x, header) for x in orderList]
+            if is_sort:
+                idCol = orderList[0]
+                header[idCol - 1] = header[idCol - 1] + "_sorted_alleles"
+                ss = (
+                    delimter.join(header) if delimter is not None else "\t".join(header)
+                )
+
+            else:
+                ss = line
 
         else:
             ss = resetID2(
