@@ -26,33 +26,43 @@ def getParser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
             """
-        %prog Set/Replace ID for any file. setID as : chr:pos:ref:alt
-        @Author: wavefancy@gmail.com (raw code comes from) and xutingfeng@big.ac.cn (modified for this version)
+            %prog Set/Replace ID for any file. setID as : chr:pos:ref:alt
+            @Author: wavefancy@gmail.com (raw code comes from) and xutingfeng@big.ac.cn (modified for this version)
 
-        Version: 2.0
-        本脚本会在原始ID列生成新的ID。新的ID格式为：chr:pos:ref:alt
+            Version: 2.0
+            This script generates new IDs based on the original ID column. The new ID format is chr:pos:ref:alt by default.
 
-        默认有header；如果存在comment，`--comment '#'`，则会忽略所有以#开头的行；
-        -s 会对ref和alt进行排序，sorted([ref,alt])，默认不排序；
-        -k 会保留原始ID，即在新的ID后面添加原始ID，用-I/--id-delimter分割（默认:）；
-        -d 指定输入文件的分隔符，默认为任意空格；
-        -I 指定ID的分隔符，默认为:
-        --add-chr 会在ID的chr列添加chr前缀，即chr1,chr2,chrX,chrY,chrMT，默认则是自动去掉chr，只有加上这个参数才会保持或者加上chr。
-        Example
-            1. cat test.txt | resetID2.py -i variant_id 1 2 3 4 既可对variant_id列进行重命名，命名规则为：1:2:3:4 => chr:pos:ref:alt
-            2. cat test.txt | resetID2.py -i variant_id 1 2 3 4 -s --add-chr 既可对variant_id列进行重命名，命名规则为：1:2:3:4 => chr:pos:ref:alt，且会对ref和alt进行排序，sorted([ref,alt])，并且会在chr列添加chr前缀，即chr1,chr2,chrX,chrY,chrMT
-        """
+            By default, input files are assumed to have headers.
+            -s sorts the ref and alt alleles using `sorted([ref, alt])`, by default no sorting is applied.
+            -k retains the original ID and appends it after the new ID using `-I/--id-delimter` as a separator (default: ':').
+            -d specifies the delimiter for the input file (default: any whitespace).
+            -I specifies the ID delimiter (default: ':').
+            --add-chr adds 'chr' prefix to the chr column of the ID, preserving or adding 'chr' to IDs.
+
+            **Example:**
+
+            1. Rename the 'variant_id' column: `cat test.txt | resetID2.py -i variant_id 1 2 3 4`
+               This renames the 'variant_id' column to the format: 1:2:3:4 => chr:pos:ref:alt.
+
+            2. Rename and format the 'variant_id' column with sorting and 'chr' prefix:
+               `cat test.txt | resetID2.py -i variant_id 1 2 3 4 -s --add-chr`
+               This renames the 'variant_id' column and formats it as chr:pos:ref:alt, 
+               sorts ref and alt alleles, and adds 'chr' prefix to chr column.
+            3. Rename, format and use '_' as id_delimiter with sorting and 'chr' prefix:
+               `cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`
+               This renames the 'variant_id' column and formats it as chr:pos:ref:alt, 
+               sorts ref and alt alleles, and adds 'chr' prefix to chr column.
+            """
         ),
     )
 
     parser.add_argument(
         "-i",
-        "--col_oreder",
+        "--col_order",
         dest="col_order",
         default=[],
         nargs="+",
-        help="default is -i 2 1 4 5 6 => ID col is 2, chr col is 1, pos col is 4, ref col is 5, alt col is 6. Note col index start from 1.如果已经是这个格式了则可以直接 -i 3， 然后进行下面的操作",
-        # type=str,
+        help="Specify the order of columns for ID, chr, pos, ref, alt. Default: ID col=2, chr col=1, pos col=4, ref col=5, alt col=6. Column index starts from 1. If the format is already in this order, you can directly use `-i 3` for further operations. You can specify index or column name here.",
     )
     parser.add_argument(
         "-k",
@@ -60,7 +70,7 @@ def getParser():
         dest="keep",
         required=False,
         action="store_true",
-        help="Include old rsID.",
+        help="Include the original rsID in the output.",
     )
     parser.add_argument(
         "-s",
@@ -68,28 +78,28 @@ def getParser():
         dest="sort",
         required=False,
         action="store_true",
-        help="ort the ref and alt alleles, sorted([ref,alt])",
+        help="Sort the ref and alt alleles using `sorted([ref, alt])`.",
     )
     parser.add_argument(
         "-d",
-        "--delimter",
-        dest="delimter",
+        "--delimiter",
+        dest="delimiter",
         default=None,
-        help="delimter for input file, default is 'any white sapce'.",
+        help="Delimiter for input file. Default: any whitespace.",
     )
 
     parser.add_argument(
         "--add-chr",
-        dest="addChr",
+        dest="add_chr",
         action="store_true",
-        help="add chr for chr col of ID",
+        help="Add 'chr' prefix to the chr column of the ID.",
     )
     parser.add_argument(
         "-I",
-        "--id-delimter",
-        dest="id_delimter",
+        "--id-delimiter",
+        dest="id_delimiter",
         default=":",
-        help="delimter for ID, default is ':'，这个会控制输出的ID的分隔符，如果传入-i 只有一个参数的时候来进行添加chr或者sort的操作时，这个则会用于分割oldID来得到chr pos ref alt",
+        help="Delimiter for the ID. Default: ':'. This controls the delimiter for the output ID. If `-i` has only one parameter and 'chr' or sorting operations are applied, this delimiter will be used to split the oldID into chr, pos, ref, alt.",
     )
 
     return parser
@@ -282,10 +292,10 @@ if __name__ == "__main__":
         orderList = [3, 1, 2, 4, 5]
     IncludeOld = args.keep
     is_sort = args.sort
-    id_delimter = args.id_delimter
-    delimter = args.delimter
+    id_delimter = args.id_delimiter
+    delimter = args.delimiter
 
-    addChr = args.addChr
+    addChr = args.add_chr
     # check header and comments
 
     line_idx = 1

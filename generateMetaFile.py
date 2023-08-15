@@ -93,7 +93,7 @@ def getParser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
             f"""
-        %prog Set/Replace ID for any file. setID as : chr:pos:ref:alt
+        %prog Generate meta file for GWAS summary file
         @Author: xutingfeng@big.ac.cn
 
         GWAS SSF: https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1
@@ -102,6 +102,10 @@ def getParser():
         Code Version: 1.0
         
         Example Code:
+        1. Simple use as below:
+            generateMetaFile.py -i yourfile 
+        2. -s will check the file is sorted or not:
+            generateMetaFile.py -i yourfile -s 
         """
         ),
     )
@@ -111,6 +115,13 @@ def getParser():
         dest="input",
         required=True,
         help="input meta file",
+    )
+    parser.add_argument(
+        "-s",
+        "--check_sort",
+        dest="check_sort",
+        action="store_true",
+        help="check if the file is sorted",
     )
     return parser
 
@@ -161,14 +172,14 @@ if __name__ == "__main__":
 
     res_dict["file_type"] = version
     # get md5
-    md5_start = time.time()
+
     filename = getfilename(file)
     metaFileName = filename + "-meta.yaml"
     md5 = checksum(file)
-    md5_end = time.time()
+
     res_dict["data_file_name"] = filename
     res_dict["data_file_md5sum"] = md5
-    print("md5 time: ", md5_end - md5_start)
+
     # get additional info
     getAdditonalInfo = parseFileName(filename)
     if getAdditonalInfo is not None:
@@ -179,44 +190,19 @@ if __name__ == "__main__":
         res_dict["genome_assembly"] = build
         res_dict["project_shortname"] = projectShortName
 
-    isSorted
-    soted_start = time.time()
-    isSorted = IsListSorted_fastk(
-        file, key=lambda x, y: x <= y, sep="\t", cols=[0, 1], ele_key=int
-    )
-    res_dict["is_sorted"] = isSorted
-    soted_end = time.time()
-    print("sorted time: ", soted_end - soted_start)
-    last modified time
-    stat_start = time.time()
+    # isSorted
+
+    if args.check_sort:
+        isSorted = IsListSorted_fastk(
+            file, key=lambda x, y: x <= y, sep="\t", cols=[0, 1], ele_key=int
+        )
+        res_dict["is_sorted"] = isSorted
+        soted_end = time.time()
+
+    # last modified time
+
     last_modified_time = getLastModifyTime(file)
     res_dict["date_last_modified"] = last_modified_time
-    stat_end = time.time()
-    print("stat time: ", stat_end - stat_start)
+
     gwas = metaGWAS(**res_dict)
     gwas.write(metaFileName)
-
-
-# ---
-# genotyping_technology:
-#   - Genome-wide genotyping array
-# gwas_id: GCST90000123
-# samples:
-# - sample_size: 12345
-#   sample_ancestry:
-#     - European
-#   ancestry_method:
-#     - self-reported
-#     - genetically determined
-# trait_description:
-#   - breast carcinoma
-# minor_allele_freq_lower_limit: 0.001
-# data_file_name: 0000123.tsv
-# file_type: GWAS-SSF v0.1
-# data_file_md5sum: 32ce41c3dca4cd9f463a0ce7351966fd
-# is_harmonised: false
-# is_sorted: false
-# date_last_modified: 2023-02-09
-# genome_assembly: GRCh37
-# coordinate_system: 1-based
-# sex: combined

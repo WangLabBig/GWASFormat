@@ -15,7 +15,7 @@ meta file 部分按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-st
 
 WangLabGWAS数据存储路径位于文件服务器：`/data/share/wanglab/GWAS-Summary-Statistics`
 
-## 文件格式要求
+## Introduction
 对于一个表型的GWAS summary，我们应当保存两个文件：
 1. `phenotype_ancestry_year_build_projectName.tsv.gz`  summary text foramat
 2. `phenotype_ancestry_year_build-meta.yaml ` meta file， 记录其他额外的信息
@@ -84,10 +84,12 @@ GWAS-Summary-Statistics/
 | url                          | https://csg.sph.umich.edu/willer/public/glgc-lipids2021/        | URL                                         | Text string (URL format) |
 
 
-## 代码
+## Usage
 
 代码存放于[Wanglab_GWASFormat](https://github.com/WangLabBig/GWASFormat)，本地服务器路径如下：
 1. 
+
+>[详细参数介绍](#API)
 
 运行流程建议：
 
@@ -101,44 +103,146 @@ step2 生成meta file
 
 step3 (optional and coming soon) 增加ref列以及增加rsid与variant_id
 
-## 代码帮助
+#### 重命名variant_id
+`cat yourfile | resetID2.py -i variant_id 1 2 ref alt -s --add-chr`
 
-`GWASFormat.py` 
 
-## Options
 
-- `-h, --help`: Show this help message and exit.
+## API
 
-- `-i COL_INDICES [COL_INDICES ...], --col COL_INDICES [COL_INDICES ...]`: Specify the columns of the following data fields:
-  - Chromosome
-  - Position
-  - Effect allele (EA)
-  - Other allele (OA)
-  - Effect size (beta)
-  - Standard error (se)
-  - Allele frequency of the effect allele (EA_freq)
-  - P-value (pval)
+### `GWASFormat.py` 
+**用法:** GWASFormat.py [-h] -i COL_INDICES [COL_INDICES ...] [-d DELIMITER]
+                     [--pval_type {pval,log10p}]
+                     [--effect_type {beta,odds_ratio,hazard_ratio}]
+                     [--ci_upper CI_UPPER] [--ci_lower CI_LOWER] [--rsid RSID]
+                     [--variant_id VARIANT_ID] [--info INFO]
+                     [--ref_allele REF_ALLELE] [-n N]
+                     [--other_col OTHER_COL [OTHER_COL ...]]
+
+
+- `-h, --help`: 显示帮助信息并退出。
+
+- `-i COL_INDICES [COL_INDICES ...], --col COL_INDICES [COL_INDICES ...]`: 指定以下数据字段的列：
+  - 染色体
+  - 位置
+  - 效应等位基因 (EA)
+  - 其他等位基因 (OA)
+  - 效应大小 (beta)
+  - 标准误差 (se)
+  - 效应等位基因频率 (EA_freq)
+  - P 值 (pval)
   
-  Column indices should start from 1. If you want to skip a column, set it to 0.
+  列索引应从 1 开始。如果要跳过某列，请将其设置为 0。如: `-i 1 2 3 4 5 6 7 8`，对应染色体信息在第一列，基因组位置在第二列等。
 
-- `-d DELIMITER, --delimiter DELIMITER`: Specify the delimiter used in the input file.
+- `-d DELIMITER, --delimiter DELIMITER`: 指定输入文件中使用的分隔符。
 
-- `--pval_type {pval,log10p}`: Specify the type of p-value column in the output file. Default: pval. Should be one of pval or log10p.
+- `--pval_type {pval,log10p}`: 指定输出文件中 P 值列的类型。默认为 pval。应选择 pval 或 log10p 中的一个。
 
-- `--effect_type {beta,odds_ratio,hazard_ratio}`: Specify the type of effect column in the output file. Default: beta. Should be one of beta, odds_ratio, or hazard_ratio.
+- `--effect_type {beta,odds_ratio,hazard_ratio}`: 指定输出文件中效应列的类型。默认为 beta。应选择 beta、odds_ratio 或 hazard_ratio 中的一个。
 
-- `--ci_upper CI_UPPER`: Specify the column index for the upper bound of the confidence interval. This is optional.
+- `--ci_upper CI_UPPER`: 指定置信区间的上限列索引。这是可选的。
 
-- `--ci_lower CI_LOWER`: Specify the column index for the lower bound of the confidence interval. This is optional.
+- `--ci_lower CI_LOWER`: 指定置信区间的下限列索引。这是可选的。
 
-- `--rsid RSID`: Specify the column index for rsid information. This is optional.
+- `--rsid RSID`: 指定 rsid 信息的列索引。这是可选的。
 
-- `--variant_id VARIANT_ID`: Specify the column index for variant_id information. This is optional.
+- `--variant_id VARIANT_ID`: 指定 variant_id 信息的列索引。这是可选的。
 
-- `--info INFO`: Specify the column index for imputation information metric. This is optional.
+- `--info INFO`: 指定修复信息度量的列索引。这是可选的。
 
-- `--ref_allele REF_ALLELE`: Specify the column index for the reference allele information. This is optional.
+- `--ref_allele REF_ALLELE`: 指定参考等位基因信息的列索引。这是可选的。
 
-- `-n N`: Specify the column index for the number of samples. This is optional.
+- `-n N`: 指定样本数量的列索引。这是可选的。
 
-- `--other_col OTHER_COL [OTHER_COL ...]`: Specify the column indices for other additional columns. This is optional.
+- `--other_col OTHER_COL [OTHER_COL ...]`: 指定其他附加列的列索引。这是可选的。
+
+**作者:** xutingfeng@big.ac.cn
+
+**版本:** 1.0
+
+**示例代码**
+1. specific column index and format all 
+    `cat yourfile | GWASFormat.py -i "CHR" 0 A1 A2 A1_FREQ -6 -5 9 `
+2. specific beta is hazard ratio and pval is log10p; --pval_type log10p/pval --effect_type hazard_ratio/beta/odds_ratio
+    `cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --pval_type log10p --effect_type odds_ratio`
+3. spcific other columns
+    `cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4`
+
+### `generateMetaFile.py`
+
+**用法:** generateMetaFile.py [-h] -i INPUT [-s]
+
+**描述:**
+
+本脚本用于为GWAS总结文件生成元数据文件。
+
+**作者:** xutingfeng@big.ac.cn
+
+GWAS SSF: [https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1](https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1)
+GWAS SSF 版本: GWAS-SSF v0.1
+
+**代码版本:** 1.0
+
+**示例代码:**
+
+1. 简单使用如下：
+
+`generateMetaFile.py -i yourfile`
+
+2. -s 会检查文件是否已排序：
+
+`generateMetaFile.py -i yourfile -s`
+
+
+**选项:**
+
+- `-h`, `--help`: 显示帮助信息并退出。
+- `-i INPUT`, `--input INPUT`: 输入的元数据文件。
+- `-s`, `--check_sort`: 检查文件是否已排序。
+
+
+### resetID2.py
+
+**用法:** resetID2.py [-h] [-i COL_ORDER [COL_ORDER ...]] [-k] [-s]
+                     [-d DELIMITER] [--add-chr] [-I ID_DELIMITER]
+
+**描述:**
+
+本脚本用于设置或替换任意文件的variant_id。默认的ID格式为chr:pos:ref:alt。
+
+**作者:** wavefancy@gmail.com（原始代码）和 xutingfeng@big.ac.cn（根据本版本进行修改）
+
+**版本:** 2.0
+
+该脚本可以基于原始ID列生成新的ID。默认情况下，新的ID格式为chr:pos:ref:alt。
+
+默认情况下，假设输入文件包含标题。
+- `-s` 选项会使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序。默认情况下不进行排序。
+- `-k` 选项会保留原始ID，并使用 `-I/--id-delimter` 作为分隔符将其附加在新ID之后（默认为':'）。
+- `-d` 选项用于指定输入文件的分隔符（默认为任意空白字符）。
+- `--add-chr` 选项会在ID的chr列添加'chr'前缀，以保留或添加'chr'到ID中。
+
+**示例:**
+
+1. 重命名 'variant_id' 列：`cat test.txt | resetID2.py -i variant_id 1 2 3 4`
+这将会将 'variant_id' 列重命名为格式：1:2:3:4 => chr:pos:ref:alt。
+
+2. 重命名 'variant_id' 列，并使用排序和'chr'前缀进行格式化：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -s --add-chr`
+这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀。
+
+3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`
+
+这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀，同时使用'_'作为分隔符。
+
+**选项:**
+
+- `-h`, `--help`: 显示帮助信息并退出。
+- `-i COL_ORDER [COL_ORDER ...]`, `--col_order COL_ORDER [COL_ORDER ...]`:
+指定ID、chr、pos、ref、alt的列顺序。默认为ID列=2，chr列=1，pos列=4，ref列=5，alt列=6。列索引从1开始。如果格式已经按照这个顺序排列，您可以直接使用 `-i 3` 进行后续操作。您可以在此处指定索引或列名。
+- `-k`, `--keep`: 在输出中保留原始rsID。
+- `-s`, `--sort`: 使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序。
+- `-d DELIMITER`, `--delimiter DELIMITER`:
+输入文件的分隔符。默认为任意空白字符。
+- `--add-chr`: 在ID的chr列添加'chr'前缀。
+- `-I ID_DELIMITER`, `--id-delimiter ID_DELIMITER`:
+ID的分隔符。默认为':'。这会控制输出ID的分隔符。如果`-i`只有一个参数，并且应用了'chr'或排序操作，则此分隔符将用于将旧ID分割为chr、pos、ref、alt。
