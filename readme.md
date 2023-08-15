@@ -81,11 +81,7 @@ GWAS-Summary-Statistics/
 | samples_size                 | 12345        | Sample size                                | Integer             |
 | sex                          | M        | Indicate if and how the study was sex-stratified | "M", "F", "combined", or "#NA" |
 | trait_description            | cad          | Author reported trait description         | Text string (multiple possible) |
-<<<<<<< HEAD
-| url                          |https://csg.sph.umich.edu/willer/public/glgc-lipids2021/results/ancestry_specific/HDL_INV_AFR_HRC_1KGP3_others_ALL.meta.singlevar.results.gz        | URL                                         | Text string (URL format) |
-=======
-| url                          |download url of your gwas data or project url        | URL                                         | Text string (URL format) |
->>>>>>> 7830e0e41cc288aba87ecc42350ecf2b3303301a
+| url                          |https:your_file_download_url.com       | URL                                         | Text string (URL format) |
 
 
 ## Usage
