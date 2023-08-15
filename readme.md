@@ -108,7 +108,7 @@ GWAS-Summary-Statistics/
 
 step1 格式化原始数据成标准格式
 
-`cat youfile | GWASFormat.py -i 1 3 5 4 7 8 6 9 | gzip > yourfile.tsv.gz`
+`cat youfile | GWASFormat.py -i 1 3 5 4 7 8 6 9 | bgzip > yourfile.tsv.gz`
 
 step2 生成meta file
 
