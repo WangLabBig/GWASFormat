@@ -81,7 +81,11 @@ GWAS-Summary-Statistics/
 | samples_size                 | 12345        | Sample size                                | Integer             |
 | sex                          | M        | Indicate if and how the study was sex-stratified | "M", "F", "combined", or "#NA" |
 | trait_description            | cad          | Author reported trait description         | Text string (multiple possible) |
+<<<<<<< HEAD
 | url                          |https://csg.sph.umich.edu/willer/public/glgc-lipids2021/results/ancestry_specific/HDL_INV_AFR_HRC_1KGP3_others_ALL.meta.singlevar.results.gz        | URL                                         | Text string (URL format) |
+=======
+| url                          |download url of your gwas data or project url        | URL                                         | Text string (URL format) |
+>>>>>>> 7830e0e41cc288aba87ecc42350ecf2b3303301a
 
 
 ## Usage
@@ -245,9 +249,7 @@ GWAS SSF 版本: GWAS-SSF v0.1
 2. 重命名 'variant_id' 列，并使用排序和'chr'前缀进行格式化：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -s --add-chr`
 这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀。
 
-3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`
-
-这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀，同时使用'_'作为分隔符。
+3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'\_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀，同时使用'_'作为分隔符。
 
 **选项:**
 
