@@ -11,7 +11,6 @@
 
 
 import argparse
-from re import A
 import sys
 import warnings
 import textwrap
@@ -152,8 +151,6 @@ def formatChr(x, nochr=False):
     else:
         raise ValueError(f"Unknown chromosome: {x}")
     return x
-
-
 
 
 def header_mapper(idx_or_str, header_col):
