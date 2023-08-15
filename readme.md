@@ -120,6 +120,7 @@ step3 (optional and coming soon) 增加ref列以及增加rsid与variant_id
 
 #### 重命名variant_id
 `cat yourfile | resetID2.py -i variant_id 1 2 ref alt -s --add-chr`
+> **⚠️注意：** `-s` 会添加 `_sorted_alleles`到原始的列名之后
 
 
 
@@ -243,9 +244,9 @@ GWAS SSF 版本: GWAS-SSF v0.1
 这将会将 'variant_id' 列重命名为格式：1:2:3:4 => chr:pos:ref:alt。
 
 2. 重命名 'variant_id' 列，并使用排序和'chr'前缀进行格式化：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -s --add-chr`
-这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀。
+这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并且添加 `_sorted_alleles`到原始的列名之后，然后在chr列添加'chr'前缀，
 
-3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'\_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并在chr列添加'chr'前缀，同时使用'_'作为分隔符。
+3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'\_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并且添加 `_sorted_alleles`到原始的列名之后，然后在chr列添加'chr'前缀，同时使用'_'作为分隔符。
 
 **选项:**
 
