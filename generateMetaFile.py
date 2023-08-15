@@ -6,7 +6,7 @@
 @Author      :Tingfeng Xu
 @version      :1.0
 """
-
+version = "GWAS-SSF v0.1"
 
 import argparse
 import os.path as osp
@@ -17,7 +17,7 @@ import hashlib
 import yaml
 
 
-DEFAULT_NA = "#NA"
+DEFAULT_NA = "NA"
 FIELDS = [
     "gwas_id",
     "genotyping_technology",
@@ -92,14 +92,14 @@ def getParser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
-            """
+            f"""
         %prog Set/Replace ID for any file. setID as : chr:pos:ref:alt
         @Author: xutingfeng@big.ac.cn
 
         GWAS SSF: https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1
-        GWAS Standard
+        GWAS SSF version: {version}
 
-        Version: 1.0
+        Code Version: 1.0
         
         Example Code:
         """
@@ -119,14 +119,16 @@ def parseGWASSummaryData(file):
     with open(file, "r") as f:
         header = f.readline()
         header = header.strip().split("\t")
+
+
 def parseFileName(filename):
     parsedFileName = filename.split("_")
-    if len(parsedFileName) == 5: # => standard 
+    if len(parsedFileName) == 5:  # => standard
         phenotype, ancestry, year, build, projectShortName = parsedFileName
         return phenotype, ancestry, year, build, projectShortName
     else:
-        return None 
-    
+        return None
+
 
 def checksum(filename, hash_factory=hashlib.md5, chunk_num_blocks=128):
     h = hash_factory()
@@ -156,6 +158,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     res_dict = {}
     file = args.input
+
+    res_dict["file_type"] = version
     # get md5
     md5_start = time.time()
     filename = getfilename(file)
@@ -175,7 +179,7 @@ if __name__ == "__main__":
         res_dict["genome_assembly"] = build
         res_dict["project_shortname"] = projectShortName
 
-    # isSorted
+    isSorted
     soted_start = time.time()
     isSorted = IsListSorted_fastk(
         file, key=lambda x, y: x <= y, sep="\t", cols=[0, 1], ele_key=int
@@ -183,15 +187,13 @@ if __name__ == "__main__":
     res_dict["is_sorted"] = isSorted
     soted_end = time.time()
     print("sorted time: ", soted_end - soted_start)
-    # last modified time
+    last modified time
     stat_start = time.time()
     last_modified_time = getLastModifyTime(file)
     res_dict["date_last_modified"] = last_modified_time
     stat_end = time.time()
     print("stat time: ", stat_end - stat_start)
-    gwas = metaGWAS(
-        **res_dict
-    )
+    gwas = metaGWAS(**res_dict)
     gwas.write(metaFileName)
 
 
