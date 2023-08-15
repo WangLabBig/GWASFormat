@@ -9,9 +9,9 @@ meta file 部分按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-st
 1. 文件名按照我们定义
 2. meta file 中的field增加了：`url`、`reference`、`project_shortname`
 
-如果不了解文件格式[请阅读文件格式要求](#文件格式要求)
+如果不了解文件格式[请阅读文件格式要求](#Introduction)
 
-运行代码格式化自己的数据[请阅读格式化流程](#代码)
+运行代码格式化自己的数据[请阅读格式化流程](#API)
 
 WangLabGWAS数据存储路径位于文件服务器：`/data/share/wanglab/GWAS-Summary-Statistics`
 
