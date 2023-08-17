@@ -324,6 +324,7 @@ if __name__ == "__main__":
 
     line_idx = 1
     for line in sys.stdin:
+        line = line.strip()  # remove \n
         ss = line.split(delimter)
 
         if line_idx == 1:

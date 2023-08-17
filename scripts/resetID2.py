@@ -12,8 +12,6 @@ import warnings
 import textwrap
 from signal import SIG_DFL, SIGPIPE, signal
 
-# need to change a lot !
-
 
 warnings.filterwarnings("ignore")
 signal(
@@ -300,6 +298,7 @@ if __name__ == "__main__":
 
     line_idx = 1
     for line in sys.stdin:
+        line = line.strip()  # remove \n
         if line_idx == 1:
             header = line.split(delimter)
 
