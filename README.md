@@ -130,6 +130,10 @@ GWAS-Summary-Statistics/
 `cat yourfile | resetID2.py -i variant_id 1 2 ref alt -s --add-chr`
 > **⚠️注意：** `-s` 会添加 `_sorted_alleles`到原始的列名之后
 
+#### 基因组版本转换
+[versionConvert.py](#versionconvertpy)
+
+
 #### step4 tabix简易指南
 ##### idx创建
 
@@ -236,12 +240,24 @@ GWAS-Summary-Statistics/
 **版本:** 1.0
 
 **示例代码**
-1. specific column index and format all 
-    `cat yourfile | GWASFormat.py -i "CHR" 0 A1 A2 A1_FREQ -6 -5 9 `
-2. specific beta is hazard ratio and pval is log10p; --pval_type log10p/pval --effect_type hazard_ratio/beta/odds_ratio
-    `cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --pval_type log10p --effect_type odds_ratio`
-3. spcific other columns
-    `cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4`
+1. 指定列索引并进行格式化，支持列名、索引混合输入：
+
+```bash
+cat yourfile | GWASFormat.py -i "CHR" 0 A1 A2 A1_FREQ -6 -5 9 
+```
+
+2. 指定 beta 为odds_ratio，pval 为 log10p；--pval_type log10p/pval --effect_type hazard_ratio/beta/odds_ratio
+
+```bash
+cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --pval_type log10p --effect_type odds_ratio
+```
+
+3. 指定其他特定列：
+
+```bash
+cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4
+```
+
 
 ### `generateMetaFile.py`
 
@@ -319,3 +335,44 @@ GWAS SSF 版本: GWAS-SSF v0.1
 - `--add-chr`: 在ID的chr列添加'chr'前缀。
 - `-I ID_DELIMITER`, `--id-delimiter ID_DELIMITER`:
 ID的分隔符。默认为':'。这会控制输出ID的分隔符。如果`-i`只有一个参数，并且应用了'chr'或排序操作，则此分隔符将用于将旧ID分割为chr、pos、ref、alt。
+
+### versionConvert.py
+
+**用法：**
+
+```bash
+versionConvert.py [-h] [-c CHAIN [CHAIN ...]] -i INPUT_COLS [INPUT_COLS ...] [-l] [-s DELIMTER] [-d]
+```
+
+**描述：**
+
+本工具通过Liftover进行基因组位置转换。
+
+**作者:** Tingfeng Xu (xutingfeng@big.ac.cn)
+**版本:** 1.0
+
+此工具允许您使用Liftover将基因组位置从一种版本转换为另一种版本。
+
+默认情况下，输入文件假定具有标题。
+
+**选项：**
+
+- `-h`, `--help`: 显示帮助信息并退出。
+- `-c CHAIN [CHAIN ...]`, `--chain CHAIN [CHAIN ...]`: 指定要从哪个基因组版本转换到哪个基因组版本（例如从'hg19'到'hg38'）。可选的 'cache' 参数指定缓存文件夹（默认为~/.liftover）。链文件可从以下网址下载：https://hgdownload.soe.ucsc.edu/downloads.html
+- `-i INPUT_COLS [INPUT_COLS ...]`, `--input_cols INPUT_COLS [INPUT_COLS ...]`: 指定要转换的基因组位置。您可以提供多个列。第一列应为染色体索引，然后是位置列。示例：-i 1 2 3 4（用于转换列2、3和4中的染色体和位置）。
+- `-l`, `--add-last`: 将转换后的位置添加为新列添加到末尾。
+- `-s DELIMTER`, `--sep DELIMTER`: 指定输入文件中使用的分隔符。默认为制表符。
+- `-d`, `--drop_unmapped`: 删除未映射位置的行。
+
+**使用示例：**
+1. 将位置从hg19转换为hg38并自动下载链文件：
+
+```bash
+cat yourfile | versionConvert.py -c hg19 hg38 -i 1 2 3 4
+```
+
+2. 使用特定链目录将位置从hg19转换为hg38，这将使用本地缓存文件作为'{target}To{query}.over.chain.gz'：
+
+```bash
+cat yourfile | versionConvert.py -c hg19 hg38 chainFilePath -i 1 2 3 4
+```

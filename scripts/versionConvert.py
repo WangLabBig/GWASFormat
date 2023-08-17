@@ -69,11 +69,14 @@ def getParser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
             """
-        %prog version Convert by liftover
-        @Author: xutingfeng@big.ac.cn
+        %prog - Genome Position Conversion Tool by Liftover
+
+        Author: Tingfeng Xu (xutingfeng@big.ac.cn)
         Version: 1.0
 
-        Default the file have header.
+        This tool allows you to convert genome positions from one build to another using liftover.
+
+        By default, input files are assumed to have a header.
 
         -c target source cache
             target: genome build to convert from e.g. 'hg19'
@@ -81,6 +84,13 @@ def getParser():
             cache: path to cache folder, defaults to ~/.liftover, if not exists will auto download
         chain file of liftoOver, you can download from :https://hgdownload.soe.ucsc.edu/downloads.html
 
+        Usage examples:
+        --------------
+        Convert positions from hg19 to hg38 and download chain file automatically:
+        cat yourfile | %prog -c hg19 hg38 -i 1 2 3 4
+
+        Convert positions from hg19 to hg38 using a specific chain dir, this will use local cache file as '{target}To{query}.over.chain.gz':
+        cat yourfile %prog -c hg19 hg38 chainFilePath -i 1 2 3 4
         """
         ),
     )
@@ -91,7 +101,11 @@ def getParser():
         default=[],
         nargs="+",
         dest="chain",
-        help="-c hg19 hg38 this will auto download to ~/.liftover ,or -c hg19 hg38 chainFilePath this will use local cache.",
+        help="""
+                Specify the genome builds to convert from and to (e.g., 'hg19' to 'hg38').
+                Optional 'cache' argument specifies the cache folder (defaults to ~/.liftover).
+                Chain files can be downloaded from: https://hgdownload.soe.ucsc.edu/downloads.html        
+""",
     )
     parser.add_argument(
         "-i",
@@ -99,7 +113,10 @@ def getParser():
         dest="input_cols",
         default=[],
         nargs="+",
-        help="Genome pos to be converted, you can input multiple cols, the first is index of chromosome colums the other are pos column to be converted, like: -i 1 2 3 4, note this will replace the raw col, if you want to add new cols, add -n/--new   ",
+        help="""
+        Specify the genome positions to be converted. You can provide multiple columns.
+                The first column should be the chromosome index, followed by position columns.
+                Example: -i 1 2 3 4 (to convert chromosome and positions in columns 2, 3, and 4).""",
         required=True,
     )
     parser.add_argument(
@@ -107,13 +124,21 @@ def getParser():
         "--add-last",
         dest="add_last",
         action="store_true",
-        help="will add converted to last cols by order of input",
+        help="Add the converted positions as new columns at the end.",
     )
     parser.add_argument(
-        "-s", "--sep", dest="delimter", default=None, help="default is tab"
+        "-s",
+        "--sep",
+        dest="delimter",
+        default=None,
+        help="Specify the delimiter used in the input file. Default is tab.",
     )
     parser.add_argument(
-        "-d", "--drop_unmapped", dest="drop_unmapped", action="store_true"
+        "-d",
+        "--drop_unmapped",
+        dest="drop_unmapped",
+        action="store_true",
+        help="Drop rows with unmapped positions.",
     )
 
     return parser
