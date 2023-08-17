@@ -121,7 +121,7 @@ GWAS-Summary-Statistics/
 **step4:** 采用bgzip（**请注意对step3做完的数据重新bgzip**）和tabix进行数据压缩。
 
 `tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
->[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转]()
+>[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转](#step4-tabix简易指南)
 
 #### step3操作
 ##### 重命名variant_id
