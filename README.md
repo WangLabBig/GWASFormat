@@ -108,21 +108,78 @@ GWAS-Summary-Statistics/
 
 运行流程建议：
 
-step1 [GWASFormat.py](#gwasformatpy) 格式化原始数据成标准格式
+**step1:** [GWASFormat.py](#gwasformatpy) 格式化原始数据成标准格式
 
 `cat youfile | GWASFormat.py -i 1 3 5 4 7 8 6 9 | bgzip > yourfile.tsv.gz`
 
-step2 使用 [generateMetaFile.py](#generatemetafilepy) 生成meta file
+**step2:** 使用 [generateMetaFile.py](#generatemetafilepy) 生成meta file
 
 `generateMetaFile.py -i youfile.tsv.gz`
 
-step3 (optional and coming soon) 增加ref列以及增加rsid与variant_id
+**step3:** (optional and coming soon) 增加ref列以及增加rsid与variant_id，详细信息请跳转到[step3操作](#step3操作)
 
-#### 重命名variant_id
+**step4:** 采用bgzip（**请注意对step3做完的数据重新bgzip**）和tabix进行数据压缩。
+
+`tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
+>[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转]()
+
+#### step3操作
+##### 重命名variant_id
 [resetID2.py](#resetid2py) 用于重命名variant_id
 
 `cat yourfile | resetID2.py -i variant_id 1 2 ref alt -s --add-chr`
 > **⚠️注意：** `-s` 会添加 `_sorted_alleles`到原始的列名之后
+
+#### step4 tabix简易指南
+##### idx创建
+
+**一条龙创建idx：**`tabix -s chr -b start -e end -c comment yourfile.tsv.gz`
+
+下面进行参数介绍与指北~
+
+`-s`, `-b`, `-e` 三个参数用于指定索引的坐标信息。比如我们的基因组数据有：染色体和基因组Position，-c指定Chr，Position用于指定染色体上对应的位置。其实从这里我们就可以知道我们的行有三个索引：Chr，posStart，posEnd，利用这三个索引我们可以根据指定的区间如：`chr1:123-5687`的索引从我们的数据中取出数据。
+
+`-c` 用于指定comment，这个comment其实就是header。比如对于vcf文件，第一列是：`#chr`，`-c #`即可。对于如我们的格式化后的数据第一列是`chromosome`，`-c c`即可。
+> 请注意一定要采用-c来处理header，这样子索引的时候：`tabix -h yourfile.tsv.gz 1` 进行查询，输出的时候会包括header；如果采用`-S `强行跳过则会丢失。
+
+因此衍生出来的几种管理数据的思路如下
+
+###### 第一种情况：
+
+| chromosome | base_pair_location | effect_allele | other_allele |
+| ---------- | ------------------ | ------------- | ------------ |
+| 1          | 785910             | G             | C            |
+| 1          | 788511             | G             | C            |
+| 1          | 804185             | G             | C            |
+| 1          | 804863             | T             | C            |
+
+这里就是标准的基因组相关的文件格式
+
+基于此可以通过这种方式创建索引：`tabix  -s 1 -b 2 -e 2 -c c yourfile.tsv.gz`
+
+索引数据的方式如下：
+
+    1. 索引染色体的所有variants：`tabix yourfile.tsv.gz -h chromose_id`
+
+    2. 索引指定区间：`tabix yourfile.tsv.gz -h chromosome:begin-end`，注意这里的chromosome必须是你的原始数据里面的写法，比如你的数据是chr1，chr2，就得这么写。对于[GWASFormat.py](#gwasformatpy)格式化的则是：1-25的数字。begin和end是`-b -e`指定的列的内容。因此对于我们格式化后的数据创建的tabix查询：`1:1234-5678`
+
+
+
+###### 第二种情况：
+
+
+| #fid | eid | 1000017 | 1000025 |
+| --- | --- | ------- | ------- |
+| 3   | 3-0.0 | 260    | 918     |
+| 3   | 3-1.0 | NA     | NA      |
+| 4   | 4-0.0 | 455    | 582     |
+| 4   | 4-1.0 | NA     | NA      |
+
+`tabix -s chr -b start -e end -c comment yourfile.tsv.gz`，这里我们查询只需要查询fid，因此我们可以把eid当作我们虚假的pos，实际上我们索引的时候不能用到这部分信息。
+
+基于此可以通过这种方式创建索引：`tabix  -s 1 -b 2 -e 2 -c # yourfile.tsv.gz`
+
+索引数据的方式如下：`tabix yourfile.tsv.gz -h query_fid`
 
 
 

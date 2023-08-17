@@ -40,7 +40,7 @@ def getParser():
         1. 指定列索引，从1开始，支持-1对应倒数第一列
         2. 指定列名
         3. 0，表示这列设为#NA，即缺失信息
-
+        columns of chrom pos effect_allele(EA) other_allele(OA) beta se EA_freq pval columns start from 1
         Example Code:
 
         1. specific column index and format all 
