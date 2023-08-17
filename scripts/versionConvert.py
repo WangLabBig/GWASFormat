@@ -135,10 +135,17 @@ def getParser():
     )
     parser.add_argument(
         "-d",
-        "--drop_unmapped",
+        "--drop-unmapped",
         dest="drop_unmapped",
         action="store_true",
-        help="Drop rows with unmapped positions.",
+        help="Drop rows with unmapped and multiple positions.",
+    )
+    parser.add_argument(
+        "-n",
+        "--no-suffix",
+        dest="no_suffix",
+        action="store_true",
+        help="Do not add suffix to the column names.",
     )
 
     return parser
@@ -153,6 +160,7 @@ if __name__ == "__main__":
     addLast = args.add_last
     drop_unmapped = args.drop_unmapped
     outputDelimter = "\t" if delimter is None else delimter
+    no_suffix = args.no_suffix
 
     if len(chain) == 2:
         target, query = chain
@@ -181,16 +189,21 @@ if __name__ == "__main__":
 
             # parse order list with col_idx or col_name
             input_cols = [header_mapper(x, header) for x in input_cols]
-            if addLast:
+
+            if not no_suffix:
                 newCols = [
                     f"{header[x-1]}_{query}" for x in input_cols[1:]
                 ]  # input_cols = [chr, pos1, pos2, ...]
-                # ss = line + outputDelimter + outputDelimter.join(newCols)
-                # print(line + outputDelimter + outputDelimter.join(newCols))
+            else:  # no_suffix
+                newCols = [f"{header[x-1]}" for x in input_cols[1:]]
+
+            if addLast:
                 header += newCols
-                ss = outputDelimter.join(header)
             else:
-                ss = line  # keep same header
+                for idx, new_header in zip(input_cols[1:], newCols):
+                    header[idx - 1] = new_header
+
+            ss = outputDelimter.join(header)
 
         else:
             line = line.split(delimter)
