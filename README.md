@@ -90,7 +90,9 @@ GWAS-Summary-Statistics/
 
 **Requirments**: `python>3.7`
 
-下载源码
+>如果使用[versionConvert.py](#versionconvertpy)，则需要`pip install liftover`
+
+**下载源码**
 
 `git clone git@github.com:WangLabBig/GWASFormat.git`
 
@@ -116,7 +118,7 @@ GWAS-Summary-Statistics/
 
 `generateMetaFile.py -i youfile.tsv.gz`
 
-**step3:** (optional and coming soon) 增加ref列以及增加rsid与variant_id，详细信息请跳转到[step3操作](#step3操作)
+**step3:** (optional and coming soon) 修改variant_id，pos的版本转换等，详细信息请跳转到[step3操作](#step3操作)
 
 **step4:** 采用bgzip（**请注意对step3做完的数据重新bgzip**）和tabix进行数据压缩。
 
@@ -133,6 +135,14 @@ GWAS-Summary-Statistics/
 #### 基因组版本转换
 [versionConvert.py](#versionconvertpy)
 
+`cat yourfile | versionConvert.py -c hg19 hg38 chainFileDir -i 1 2`
+
+这条代码会把第一列处理成染色体，第二列处理成对应的位置，如1,2就对应了一个variants的坐标，`-c hg19 hg38 chainFileDir`就指明了从hg19=>hg38的版本转换
+>**⚠️注意：** 
+> 
+>1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-d/--drop-unmapped` 可以自动过滤掉这些
+>
+>2. 默认是新的pos替换原来的并且加上后缀：`_hg38`;`--no-suffix`会去掉后缀，`--add-last`会不覆盖转而在最后面加上新的列
 
 #### step4 tabix简易指南
 ##### idx创建
@@ -363,6 +373,11 @@ versionConvert.py [-h] [-c CHAIN [CHAIN ...]] -i INPUT_COLS [INPUT_COLS ...] [-l
 - `-l`, `--add-last`: 将转换后的位置添加为新列添加到末尾。
 - `-s DELIMTER`, `--sep DELIMTER`: 指定输入文件中使用的分隔符。默认为制表符。
 - `-d`, `--drop_unmapped`: 删除未映射位置的行。
+- `-n`, `--no-suffix`：不加后缀到列名上
+
+1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-d/--drop-unmapped` 可以自动过滤掉这些
+
+2. 默认是新的pos替换原来的并且加上后缀：`_hg38`;`--no-suffix`会去掉后缀，`--add-last`会不覆盖转而在最后面加上新的列
 
 **使用示例：**
 1. 将位置从hg19转换为hg38并自动下载链文件：
