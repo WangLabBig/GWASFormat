@@ -123,7 +123,7 @@ GWAS-Summary-Statistics/
 **step4:** 采用bgzip（**请注意对step3做完的数据重新bgzip**）和tabix进行数据压缩。
 
 **step5:** 构建pheweb需要的格式: `pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6`
->必须要完成以下操作：step1；其余均可以不用。
+>必须要完成step1，然后直接接上该代码既可。
 
 `tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
 >[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转](#step4-tabix简易指南)
