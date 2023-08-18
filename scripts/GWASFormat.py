@@ -359,10 +359,24 @@ if __name__ == "__main__":
             # update header
             formated_ss = [key for key, key_idx in column_mapping.items()]
         else:
-            formated_ss = [
-                ss[key_idx - 1] if key_idx is not None else "#NA"
-                for key, key_idx in column_mapping.items()
-            ]
+            # formated_ss = [
+            #     ss[key_idx - 1] if key_idx is not None else "#NA"
+            #     for key, key_idx in column_mapping.items()
+            # ]
+            formated_ss = []
+            for key, key_idx in column_mapping.items():
+                if key_idx is not None:
+                    if key == "chromosome":
+                        new_value = formatChr(ss[key_idx - 1])
+                    elif key in ["effect_allele", "other_allele"]:
+                        new_value = ss[key_idx - 1].upper()
+                    else:
+                        new_value = ss[key_idx - 1]
+
+                else:
+                    new_value = "#NA"
+
+                formated_ss.append(new_value)
 
         formated_ss = "\t".join(formated_ss)  # \t delimter
 
