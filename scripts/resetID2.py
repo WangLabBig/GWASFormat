@@ -153,8 +153,7 @@ def formatChr(x, nochr=True):
             x = "24"
         elif x == "mt":
             x = "25"
-        else:
-            raise ValueError(f"Unknown chromosome: {x}")
+
         return x
     else:
         if x not in ["23", "24", "25"]:
