@@ -122,6 +122,9 @@ GWAS-Summary-Statistics/
 
 **step4:** 采用bgzip（**请注意对step3做完的数据重新bgzip**）和tabix进行数据压缩。
 
+**step5:** 构建pheweb需要的格式: `pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6`
+>必须要完成以下操作：step1；其余均可以不用。
+
 `tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
 >[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转](#step4-tabix简易指南)
 
@@ -140,7 +143,7 @@ GWAS-Summary-Statistics/
 这条代码会把第一列处理成染色体，第二列处理成对应的位置，如1,2就对应了一个variants的坐标，`-c hg19 hg38 chainFileDir`就指明了从hg19=>hg38的版本转换
 >**⚠️注意：** 
 > 
->1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-d/--drop-unmapped` 可以自动过滤掉这些
+>1. 默认是会把没匹配的、匹配到多个位置的行的pos丢掉，`-k/--keep-unmapped` 可以保留这些
 >
 >2. 默认是新的pos替换原来的并且加上后缀：`_hg38`;`--no-suffix`会去掉后缀，`--add-last`会不覆盖转而在最后面加上新的列
 
@@ -372,10 +375,10 @@ versionConvert.py [-h] [-c CHAIN [CHAIN ...]] -i INPUT_COLS [INPUT_COLS ...] [-l
 - `-i INPUT_COLS [INPUT_COLS ...]`, `--input_cols INPUT_COLS [INPUT_COLS ...]`: 指定要转换的基因组位置。您可以提供多个列。第一列应为染色体索引，然后是位置列。示例：-i 1 2 3 4（用于转换列2、3和4中的染色体和位置）。
 - `-l`, `--add-last`: 将转换后的位置添加为新列添加到末尾。
 - `-s DELIMTER`, `--sep DELIMTER`: 指定输入文件中使用的分隔符。默认为制表符。
-- `-d`, `--drop_unmapped`: 删除未映射位置的行。
+- `-k`, `--keep_unmapped`: KEEP未映射位置的行。
 - `-n`, `--no-suffix`：不加后缀到列名上
 
-1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-d/--drop-unmapped` 可以自动过滤掉这些
+1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-k/--keep-unmapped` 可以自动过滤掉这些
 
 2. 默认是新的pos替换原来的并且加上后缀：`_hg38`;`--no-suffix`会去掉后缀，`--add-last`会不覆盖转而在最后面加上新的列
 

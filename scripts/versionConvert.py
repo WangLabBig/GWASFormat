@@ -14,6 +14,7 @@ import warnings
 import textwrap
 from signal import SIG_DFL, SIGPIPE, signal
 import os.path as osp
+DEFAULT_NA = "NA"
 
 warnings.filterwarnings("ignore")
 signal(
@@ -62,6 +63,71 @@ def header_mapper(string, header_col):
     else:
         idx = None
     return idx
+
+
+def formatChr(x, nochr=True):
+    """
+    Format chromosome identifier.
+
+    Args:
+        x (str/int): Input chromosome identifier, can be a string or integer.
+        nochr (bool): Control whether to remove the "chr" prefix. Default is True, which removes the prefix.
+
+    Returns:
+        str: Formatted chromosome identifier.
+
+    Raises:
+        ValueError: If the chromosome identifier is unknown or invalid.
+
+    Usage Examples:
+
+    1. Remove "chr" prefix and convert x, y, mt to 23, 24, 25:
+       formatChr("chrX")  # Returns "23"
+       formatChr("chrY")  # Returns "24"
+       formatChr("chrMT")  # Returns "25"
+
+    2. Add "chr" prefix and convert 23, 24, 25 to x, y, mt:
+       formatChr("23", nochr=False)  # Returns "chrX"
+       formatChr("24", nochr=False)  # Returns "chrY"
+       formatChr("25", nochr=False)  # Returns "chrMT"
+
+    3. Remove "chr" prefix and convert any string or integer to 23, 24, 25:
+       formatChr("chr1")  # Returns "1"
+       formatChr(23)  # Returns "23"
+
+    Notes:
+        - ValueError will be raised if the given chromosome identifier is invalid.
+        - When nochr is True, "x", "y", "mt" will be converted to 23, 24, 25.
+        - When nochr is False, 23, 24, 25 will be converted to "chrX", "chrY", "chrMT".
+    """
+    if isinstance(x, int):
+        x = str(x)
+
+    if nochr:
+        x = x.lower()
+        # remove chr
+        if x.startswith("chr"):
+            x = x.lstrip("chr")
+        # turn x, y, mt => 23, 24, 25
+        if x == "x":
+            x = "23"
+        elif x == "y":
+            x = "24"
+        elif x == "mt":
+            x = "25"
+
+        return x
+    else:
+        if x not in ["23", "24", "25"]:
+            x = "chr" + x
+        else:
+            if x == "23":
+                x = "chrX"
+            elif x == "24":
+                x = "chrY"
+            elif x == "25":
+                x = "chrMT"
+        return x
 
 
 def getParser():
@@ -134,11 +200,11 @@ def getParser():
         help="Specify the delimiter used in the input file. Default is tab.",
     )
     parser.add_argument(
-        "-d",
-        "--drop-unmapped",
-        dest="drop_unmapped",
+        "-k",
+        "--keep-unmapped",
+        dest="keep_unmapped",
         action="store_true",
-        help="Drop rows with unmapped and multiple positions.",
+        help="keep rows with unmapped and multiple positions.",
     )
     parser.add_argument(
         "-n",
@@ -158,7 +224,7 @@ if __name__ == "__main__":
     input_cols = args.input_cols
     delimter = args.delimter
     addLast = args.add_last
-    drop_unmapped = args.drop_unmapped
+    keep_unmapped = args.keep_unmapped
     outputDelimter = "\t" if delimter is None else delimter
     no_suffix = args.no_suffix
 
@@ -182,6 +248,7 @@ if __name__ == "__main__":
     line_idx = 1
     unmapped = 0
     multiple = 0
+    notSameChr = 0
     for line in sys.stdin:
         line = line.strip()  # remove \n
         if line_idx == 1:
@@ -208,29 +275,43 @@ if __name__ == "__main__":
         else:
             line = line.split(delimter)
             chr = line[input_cols[0] - 1]
+            chr = formatChr(
+                chr, nochr=True
+            )  # liftover only support 1, 2 ... not chr1 ...
             for each in input_cols[1:]:
                 pos = int(line[each - 1])
 
                 lifter_res = lifter[chr][pos]
                 # TODO: warnning message passed to stderr
                 if len(lifter_res) == 0:
-                    message = f"Warning: {chr}:{pos} can not convert to {query} version, will return NA"
+                    # message = f"Warning: {chr}:{pos} can not convert to {query} version, will return NA"
                     # sys.stderr.write(f"{message}\n")
+
                     unmapped += 1
-                    new_pos = "NA"
-                    if drop_unmapped:
+                    new_pos = DEFAULT_NA
+                    if not keep_unmapped:
                         continue
                 elif len(lifter_res) > 1:
                     # message = f"Warning: {chr}:{pos} convert to {query} version have multiple results, will return NA"
-                    sys.stderr.write(f"{message}\n")
-                    new_pos = "NA"
+                    # sys.stderr.write(f"{message}\n")
+
+                    new_pos = DEFAULT_NA
                     multiple += 1
-                    if drop_unmapped:
+                    if not keep_unmapped:
                         continue
                 else:
                     # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
+                    # Waring: new_chr may not as same as chr
                     new_chr, new_pos, new_strand = lifter_res[0]
                     new_pos = str(new_pos)  # int => str
+                    new_chr = formatChr(new_chr, nochr=True)  # remove chr
+                    if new_chr != chr:
+                        notSameChr += 1
+                        if not keep_unmapped:
+                            continue
+                        else:
+                            new_pos = DEFAULT_NA
+
                 if not addLast:
                     line[each - 1] = new_pos
                 else:
@@ -241,9 +322,19 @@ if __name__ == "__main__":
 
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
-if unmapped + multiple >= line_idx // 2:
+sys.stderr.write(f"notSameChr count: {notSameChr}\n")
+
+if unmapped >= line_idx / 100:
     sys.stderr.write(
-        "Warning: over half of the input lines are unmapped or multiple mapped, please check your target and query version\n"
+        "Warning: over 1% of the input lines are unmapped, please check your target and query version\n"
+    )
+if multiple >= line_idx / 100:
+    sys.stderr.write(
+        "Warning: over 1% of the input lines are multiple mapped, please check your target and query version\n"
+    )
+if notSameChr >= line_idx / 100:
+    sys.stderr.write(
+        "Warning: over 1% of the input lines are not same chromosome, please check your target and query version\n"
     )
 
 
