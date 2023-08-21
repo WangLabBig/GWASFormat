@@ -14,6 +14,7 @@ import warnings
 import textwrap
 from signal import SIG_DFL, SIGPIPE, signal
 import os.path as osp
+
 DEFAULT_NA = "NA"
 
 warnings.filterwarnings("ignore")
@@ -249,8 +250,11 @@ if __name__ == "__main__":
     unmapped = 0
     multiple = 0
     notSameChr = 0
+
+    print(keep_unmapped)
     for line in sys.stdin:
         line = line.strip()  # remove \n
+        line_need_skip = False
         if line_idx == 1:
             header = line.split(delimter)
 
@@ -280,7 +284,7 @@ if __name__ == "__main__":
             )  # liftover only support 1, 2 ... not chr1 ...
             for each in input_cols[1:]:
                 pos = int(line[each - 1])
-
+                # TODO: chrX和chrY的处理
                 lifter_res = lifter[chr][pos]
                 # TODO: warnning message passed to stderr
                 if len(lifter_res) == 0:
@@ -290,7 +294,9 @@ if __name__ == "__main__":
                     unmapped += 1
                     new_pos = DEFAULT_NA
                     if not keep_unmapped:
-                        continue
+                        line_need_skip = True
+                        # continue
+                        break
                 elif len(lifter_res) > 1:
                     # message = f"Warning: {chr}:{pos} convert to {query} version have multiple results, will return NA"
                     # sys.stderr.write(f"{message}\n")
@@ -298,7 +304,9 @@ if __name__ == "__main__":
                     new_pos = DEFAULT_NA
                     multiple += 1
                     if not keep_unmapped:
-                        continue
+                        # continue
+                        line_need_skip = True
+                        break
                 else:
                     # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
                     # Waring: new_chr may not as same as chr
@@ -308,7 +316,9 @@ if __name__ == "__main__":
                     if new_chr != chr:
                         notSameChr += 1
                         if not keep_unmapped:
-                            continue
+                            # continue
+                            line_need_skip = True
+                            break
                         else:
                             new_pos = DEFAULT_NA
 
@@ -317,8 +327,13 @@ if __name__ == "__main__":
                 else:
                     line.append(new_pos)
             ss = outputDelimter.join(line)
-        sys.stdout.write(f"{ss}\n")
+
         line_idx += 1
+        if line_need_skip and not keep_unmapped:
+            continue
+        else:
+            sys.stdout.write(f"{ss}\n")
+
 
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
