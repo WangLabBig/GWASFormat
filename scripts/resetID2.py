@@ -70,6 +70,7 @@ def getParser():
         action="store_true",
         help="Include the original rsID in the output.",
     )
+    parser.add_argument("--drop-suffix", dest="drop_suffix", action="store_true", help = " drop the suffix of columns name, sorted_alleles => None, only work when -s is used")
     parser.add_argument(
         "-s",
         "--sort",
@@ -291,7 +292,7 @@ if __name__ == "__main__":
     is_sort = args.sort
     id_delimter = args.id_delimiter
     delimter = args.delimiter
-
+    drop_suffix = args.drop_suffix
     addChr = args.add_chr
     # check header and comments
 
@@ -305,7 +306,10 @@ if __name__ == "__main__":
             orderList = [header_mapper(x, header) for x in orderList]
             if is_sort:
                 idCol = orderList[0]
-                header[idCol - 1] = header[idCol - 1] + "_sorted_alleles"
+
+                if not drop_suffix:
+                    header[idCol - 1] = header[idCol - 1] + "_sorted_alleles"
+                    
                 ss = (
                     delimter.join(header) if delimter is not None else "\t".join(header)
                 )
