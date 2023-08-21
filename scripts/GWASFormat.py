@@ -48,7 +48,7 @@ def getParser():
         2. specific beta is hazard ratio and pval is log10p; --pval_type log10p/pval --effect_type hazard_ratio/beta/odds_ratio
             cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --pval_type log10p --effect_type odds_ratio
         3. spcific other columns
-         cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4
+         cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_cols -2 -4
 
         """
         ),
@@ -69,72 +69,72 @@ def getParser():
         dest="delimter",
     )
     parser.add_argument(
-        "--pval_type",
+        "--pval-type",
         dest="pval_type",
         default="pval",
         choices=["pval", "log10p"],
         help="column 8 in output File type, default: pval, should be one of pval, log10p",
     )
     parser.add_argument(
-        "--effect_type",
+        "--effect-type",
         dest="effect_type",
         default="beta",
         choices=["beta", "odds_ratio", "hazard_ratio"],
         help="column 5 in output File type, default: beta, should be one of beta, odds_ratio, hazard_ratio",
     )
     parser.add_argument(
-        "--ci_upper",
+        "--ci-upper",
         dest="ci_upper",
-        type=int,
+        # type=int,
         help="Upper bound of confidence interval. Number of col index, optioanl",
         required=False,
     )
     parser.add_argument(
-        "--ci_lower",
+        "--ci-lower",
         dest="ci_lower",
-        type=int,
+        # type=int,
         help="Lower bound of confidence interval. Number of col index, optional",
         required=False,
     )
     parser.add_argument(
         "--rsid",
         dest="rsid",
-        type=int,
+        # type=int,
         help="rsid. Number of col index, optional",
         required=False,
     )
     parser.add_argument(
-        "--variant_id",
+        "--variant-id",
         dest="variant_id",
-        type=int,
+        # type=int,
         help="variant_id. Number of col index, optional",
         required=False,
     )
     parser.add_argument(
         "--info",
         dest="info",
-        type=int,
+        # type=int,
         help="Imputation information metric. Number of col index, optional",
         required=False,
     )
     parser.add_argument(
-        "--ref_allele",
+        "--ref-allele",
         dest="ref_allele",
-        type=int,
+        # type=int,
         help="ref_allele. Number of col index, optional",
         required=False,
     )
     parser.add_argument(
         "-n",
         dest="n",
-        type=int,
+        # type=int,
         help="Number of samples. Number of col index, optional",
         required=False,
     )
     parser.add_argument(
-        "--other_col",
-        dest="other_col",
-        type=int,
+        "--other-cols",
+        dest="other_cols",
+        # type=int,
         default=[],
         nargs="+",
         help="Other columns. Number of col index, optional",
@@ -314,8 +314,8 @@ if __name__ == "__main__":
             args.n,
         ],
     ):
-        if key_idx != "0":
-            Mandatory_fields[key] = key_idx
+        if key_idx != "0" and key_idx is not None:
+            Encouraged_fields[key] = key_idx
 
     column_mapping = {}
     column_mapping.update(Mandatory_fields)
@@ -335,9 +335,9 @@ if __name__ == "__main__":
                 for key, key_idx in column_mapping.items()
             }
 
-            if args.other_col:
+            if args.other_cols:
                 other_col_indices = [
-                    header_mapper(i, raw_header) for i in args.other_col
+                    header_mapper(i, raw_header) for i in args.other_cols
                 ]
                 user_defined_dict = {
                     ss[key_idx - 1]: key_idx for key_idx in other_col_indices
@@ -372,7 +372,6 @@ if __name__ == "__main__":
                         new_value = ss[key_idx - 1].upper()
                     else:
                         new_value = ss[key_idx - 1]
-
                 else:
                     new_value = "#NA"
 
@@ -394,9 +393,9 @@ sys.stderr.close()
 # with open("time.log", "w") as f:
 #     f.write(time_str)
 
-# zcat xxx.tsv | format.py -i 1 2 3 4 5 6 7 --beta haz --pval_type log10p --variant_id 9 --other_col 21 22 "test"  | match_rsid.py -col 4 -c rsid | ref_match.py -col 4 -r GRCh37.fasta.gz | bgzip > xxx.formated.tsv.gz
+# zcat xxx.tsv | format.py -i 1 2 3 4 5 6 7 --beta haz --pval_type log10p --variant_id 9 --other_cols 21 22 "test"  | match_rsid.py -col 4 -c rsid | ref_match.py -col 4 -r GRCh37.fasta.gz | bgzip > xxx.formated.tsv.gz
 
 # Example Code:
-#     zcat xxx.tsv | format.py -i 1 2 3 4 5 6 7 --beta haz --pval_type log10p --variant_id 9 --other_col 21 22 "test"  | resetID -i 2 1 3 4 5 --header
+#     zcat xxx.tsv | format.py -i 1 2 3 4 5 6 7 --beta haz --pval_type log10p --variant_id 9 --other_cols 21 22 "test"  | resetID -i 2 1 3 4 5 --header
 
 #     match_rsid.py -col 4 -c rsid | ref_match.py -col 4 -r GRCh37.fasta.gz | bgzip > xxx.formated.tsv.gz
