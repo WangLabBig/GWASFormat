@@ -152,7 +152,7 @@ def formatChr(x, nochr=True):
             x = "23"
         elif x == "y":
             x = "24"
-        elif x == "mt":
+        elif x == "mt" or "m":
             x = "25"
 
         return x
