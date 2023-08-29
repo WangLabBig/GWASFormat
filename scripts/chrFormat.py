@@ -40,7 +40,7 @@ def formatChr(x, nochr=True):
     1. Remove "chr" prefix and convert x, y, mt to 23, 24, 25:
        formatChr("chrX")  # Returns "23"
        formatChr("chrY")  # Returns "24"
-       formatChr("chrMT")  # Returns "25"
+       formatChr("chrMT") or chrM  # Returns "25"
 
     2. Add "chr" prefix and convert 23, 24, 25 to x, y, mt:
        formatChr("23", nochr=False)  # Returns "chrX"
@@ -69,7 +69,7 @@ def formatChr(x, nochr=True):
             x = "23"
         elif x == "y":
             x = "24"
-        elif x == "mt":
+        elif x == "mt" or "m"::
             x = "25"
 
         return x
