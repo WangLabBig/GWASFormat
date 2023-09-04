@@ -9,7 +9,6 @@
 import subprocess
 import sys
 import argparse
-import sys
 import warnings
 import textwrap
 from signal import SIG_DFL, SIGPIPE, signal
@@ -66,7 +65,7 @@ def header_mapper(string, header_col):
     return idx
 
 
-def formatChr(x, nochr=True):
+def formatChrLiftover(x, nochr=True):
     """
     Format chromosome identifier.
 
@@ -80,26 +79,6 @@ def formatChr(x, nochr=True):
     Raises:
         ValueError: If the chromosome identifier is unknown or invalid.
 
-    Usage Examples:
-
-    1. Remove "chr" prefix and convert x, y, mt to 23, 24, 25:
-       formatChr("chrX")  # Returns "23"
-       formatChr("chrY")  # Returns "24"
-       formatChr("chrMT")  # Returns "25"
-
-    2. Add "chr" prefix and convert 23, 24, 25 to x, y, mt:
-       formatChr("23", nochr=False)  # Returns "chrX"
-       formatChr("24", nochr=False)  # Returns "chrY"
-       formatChr("25", nochr=False)  # Returns "chrMT"
-
-    3. Remove "chr" prefix and convert any string or integer to 23, 24, 25:
-       formatChr("chr1")  # Returns "1"
-       formatChr(23)  # Returns "23"
-
-    Notes:
-        - ValueError will be raised if the given chromosome identifier is invalid.
-        - When nochr is True, "x", "y", "mt" will be converted to 23, 24, 25.
-        - When nochr is False, 23, 24, 25 will be converted to "chrX", "chrY", "chrMT".
     """
     if isinstance(x, int):
         x = str(x)
@@ -110,24 +89,13 @@ def formatChr(x, nochr=True):
         if x.startswith("chr"):
             x = x.lstrip("chr")
         # turn x, y, mt => 23, 24, 25
-        if x == "x":
-            x = "23"
-        elif x == "y":
-            x = "24"
-        elif x == "mt":
-            x = "25"
+        if x == "x" or x == "23":
+            x = "X"
+        elif x == "y" or x == "24":
+            x = "Y"
+        elif x == "mt" or x == "25":
+            x = "MT"
 
-        return x
-    else:
-        if x not in ["23", "24", "25"]:
-            x = "chr" + x
-        else:
-            if x == "23":
-                x = "chrX"
-            elif x == "24":
-                x = "chrY"
-            elif x == "25":
-                x = "chrMT"
         return x
 
 
@@ -249,9 +217,8 @@ if __name__ == "__main__":
     line_idx = 1
     unmapped = 0
     multiple = 0
+    key_error = 0
     notSameChr = 0
-
-    print(keep_unmapped)
     for line in sys.stdin:
         line = line.strip()  # remove \n
         line_need_skip = False
@@ -279,48 +246,57 @@ if __name__ == "__main__":
         else:
             line = line.split(delimter)
             chr = line[input_cols[0] - 1]
-            chr = formatChr(
+            chr = formatChrLiftover(
                 chr, nochr=True
             )  # liftover only support 1, 2 ... not chr1 ...
             for each in input_cols[1:]:
                 pos = int(line[each - 1])
                 # TODO: chrX和chrY的处理
-                lifter_res = lifter[chr][pos]
-                # TODO: warnning message passed to stderr
-                if len(lifter_res) == 0:
-                    # message = f"Warning: {chr}:{pos} can not convert to {query} version, will return NA"
-                    # sys.stderr.write(f"{message}\n")
+                try:  # key is ok
+                    lifter_res = lifter[chr][pos]
+                    # TODO: warnning message passed to stderr
+                    if len(lifter_res) == 0:
+                        # message = f"Warning: {chr}:{pos} can not convert to {query} version, will return NA"
+                        # sys.stderr.write(f"{message}\n")
 
-                    unmapped += 1
-                    new_pos = DEFAULT_NA
-                    if not keep_unmapped:
-                        line_need_skip = True
-                        # continue
-                        break
-                elif len(lifter_res) > 1:
-                    # message = f"Warning: {chr}:{pos} convert to {query} version have multiple results, will return NA"
-                    # sys.stderr.write(f"{message}\n")
+                        unmapped += 1
+                        new_pos = DEFAULT_NA
+                        if not keep_unmapped:
+                            line_need_skip = True
+                            # continue
+                            break
+                    elif len(lifter_res) > 1:
+                        # message = f"Warning: {chr}:{pos} convert to {query} version have multiple results, will return NA"
+                        # sys.stderr.write(f"{message}\n")
 
-                    new_pos = DEFAULT_NA
-                    multiple += 1
-                    if not keep_unmapped:
-                        # continue
-                        line_need_skip = True
-                        break
-                else:
-                    # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
-                    # Waring: new_chr may not as same as chr
-                    new_chr, new_pos, new_strand = lifter_res[0]
-                    new_pos = str(new_pos)  # int => str
-                    new_chr = formatChr(new_chr, nochr=True)  # remove chr
-                    if new_chr != chr:
-                        notSameChr += 1
+                        new_pos = DEFAULT_NA
+                        multiple += 1
                         if not keep_unmapped:
                             # continue
                             line_need_skip = True
                             break
-                        else:
-                            new_pos = DEFAULT_NA
+                    else:
+                        # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
+                        # Waring: new_chr may not as same as chr
+                        new_chr, new_pos, new_strand = lifter_res[0]
+                        new_pos = str(new_pos)  # int => str
+                        new_chr = formatChrLiftover(new_chr, nochr=True)  # remove chr
+                        if new_chr != chr:
+                            notSameChr += 1
+                            if not keep_unmapped:
+                                # continue
+                                line_need_skip = True
+                                break
+                            else:
+                                new_pos = DEFAULT_NA
+
+                except KeyError:
+                    key_error += 1
+                    new_pos = DEFAULT_NA
+                    if not keep_unmapped:
+                        # continue
+                        line_need_skip = True
+                        break
 
                 if not addLast:
                     line[each - 1] = new_pos
@@ -338,7 +314,7 @@ if __name__ == "__main__":
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
 sys.stderr.write(f"notSameChr count: {notSameChr}\n")
-
+sys.stderr.write(f"key_error count: {key_error}\n")
 if unmapped >= line_idx / 100:
     sys.stderr.write(
         "Warning: over 1% of the input lines are unmapped, please check your target and query version\n"
@@ -351,7 +327,10 @@ if notSameChr >= line_idx / 100:
     sys.stderr.write(
         "Warning: over 1% of the input lines are not same chromosome, please check your target and query version\n"
     )
-
+if key_error >= line_idx / 100:
+    sys.stderr.write(
+        "Warning: over 1% of the input lines are key error, please check your data of chr is consistent with your target and query genome version\n"
+    )
 
 sys.stdout.close()
 sys.stderr.flush()
