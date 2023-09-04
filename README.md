@@ -61,27 +61,27 @@ GWAS-Summary-Statistics/
 
 #### `Field`
 
-| Key                          | Value        | Description                                 | Accepted Value      |
-|------------------------------|--------------|---------------------------------------------|---------------------|
-| ancestry_method              | genetically determined        | Method used to determine sample ancestry e.g. self reported/genetically determined  | Text string (multiple possible) |
-| coordinate_system            | 1-based        | Coordinate System                           | 1-based/0-based     |
-| data_file_md5sum             | c4fcf2ef404f36cd3bbb2301fda94a1c | Data file MD5 checksum                      | Alphanumeric hash  |
-| data_file_name               | cad_white_2022_GRCh37_CardiogramPlusC4D | Data file name                              | Text string         |
-| date_last_modified           | 2023-08-15 | Date last modified                         | Date format ('YYYY-MM-DD') |
-| file_type                    | GWAS-SSF v0.1        | File type                                   | Text string (multiple possible) |
-| genome_assembly              | GRCh37       | Genome assembly                            | GRCh/NCBI/UCSC      |
-| genotyping_technology        | Genome-wide genotyping array        | Genotyping technology                      | Text string (multiple possible) |
-| gwas_id                      | GCST90000123        | GWAS ID                                     | Text string (multiple possible) |
-| is_harmonised                | false        | Flag whether the file is harmonised        | Boolean             |
-| is_sorted                    | true         | Flag whether the file is sorted by genomic location | Boolean             |
-| minor_allele_freq_lower_limit| 0.001        | Lowest possible minor allele frequency    | Numeric             |
-| project_shortname            | AS           | Project shortname                          | Text string         |
-| reference                    | Global GWAS Meta Analysis on CAD        | Reference                                   | Text string (multiple possible) |
-| samples_ancestry             | white        | Sample ancestry                            | Text string (multiple possible) |
-| samples_size                 | 12345        | Sample size                                | Integer             |
-| sex                          | M        | Indicate if and how the study was sex-stratified | "M", "F", "combined", or "#NA" |
-| trait_description            | cad          | Author reported trait description         | Text string (multiple possible) |
-| url                          |https:your_file_download_url.com       | URL                                         | Text string (URL format) |
+| Key                           | Value                                   | Description                                                                        | Accepted Value                  |
+| ----------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------- |
+| ancestry_method               | genetically determined                  | Method used to determine sample ancestry e.g. self reported/genetically determined | Text string (multiple possible) |
+| coordinate_system             | 1-based                                 | Coordinate System                                                                  | 1-based/0-based                 |
+| data_file_md5sum              | c4fcf2ef404f36cd3bbb2301fda94a1c        | Data file MD5 checksum                                                             | Alphanumeric hash               |
+| data_file_name                | cad_white_2022_GRCh37_CardiogramPlusC4D | Data file name                                                                     | Text string                     |
+| date_last_modified            | 2023-08-15                              | Date last modified                                                                 | Date format ('YYYY-MM-DD')      |
+| file_type                     | GWAS-SSF v0.1                           | File type                                                                          | Text string (multiple possible) |
+| genome_assembly               | GRCh37                                  | Genome assembly                                                                    | GRCh/NCBI/UCSC                  |
+| genotyping_technology         | Genome-wide genotyping array            | Genotyping technology                                                              | Text string (multiple possible) |
+| gwas_id                       | GCST90000123                            | GWAS ID                                                                            | Text string (multiple possible) |
+| is_harmonised                 | false                                   | Flag whether the file is harmonised                                                | Boolean                         |
+| is_sorted                     | true                                    | Flag whether the file is sorted by genomic location                                | Boolean                         |
+| minor_allele_freq_lower_limit | 0.001                                   | Lowest possible minor allele frequency                                             | Numeric                         |
+| project_shortname             | AS                                      | Project shortname                                                                  | Text string                     |
+| reference                     | Global GWAS Meta Analysis on CAD        | Reference                                                                          | Text string (multiple possible) |
+| samples_ancestry              | white                                   | Sample ancestry                                                                    | Text string (multiple possible) |
+| samples_size                  | 12345                                   | Sample size                                                                        | Integer                         |
+| sex                           | M                                       | Indicate if and how the study was sex-stratified                                   | "M", "F", "combined", or "#NA"  |
+| trait_description             | cad                                     | Author reported trait description                                                  | Text string (multiple possible) |
+| url                           | https:your_file_download_url.com        | URL                                                                                | Text string (URL format)        |
 
 
 ## Usage
@@ -185,12 +185,12 @@ GWAS-Summary-Statistics/
 ###### 第二种情况：
 
 
-| #fid | eid | 1000017 | 1000025 |
-| --- | --- | ------- | ------- |
-| 3   | 3-0.0 | 260    | 918     |
-| 3   | 3-1.0 | NA     | NA      |
-| 4   | 4-0.0 | 455    | 582     |
-| 4   | 4-1.0 | NA     | NA      |
+| #fid | eid   | 1000017 | 1000025 |
+| ---- | ----- | ------- | ------- |
+| 3    | 3-0.0 | 260     | 918     |
+| 3    | 3-1.0 | NA      | NA      |
+| 4    | 4-0.0 | 455     | 582     |
+| 4    | 4-1.0 | NA      | NA      |
 
 `tabix -s chr -b start -e end -c comment yourfile.tsv.gz`，这里我们查询只需要查询fid，因此我们可以把eid当作我们虚假的pos，实际上我们索引的时候不能用到这部分信息。
 
@@ -375,8 +375,9 @@ versionConvert.py [-h] [-c CHAIN [CHAIN ...]] -i INPUT_COLS [INPUT_COLS ...] [-l
 - `-i INPUT_COLS [INPUT_COLS ...]`, `--input_cols INPUT_COLS [INPUT_COLS ...]`: 指定要转换的基因组位置。您可以提供多个列。第一列应为染色体索引，然后是位置列。示例：-i 1 2 3 4（用于转换列2、3和4中的染色体和位置）。
 - `-l`, `--add-last`: 将转换后的位置添加为新列添加到末尾。
 - `-s DELIMTER`, `--sep DELIMTER`: 指定输入文件中使用的分隔符。默认为制表符。
-- `-k`, `--keep_unmapped`: KEEP未映射位置的行。
+- `-k`, `--keep_unmapped`: KEEP未映射位置的行，两类：未匹配上和匹配到多个位置的。对于匹配到其他染色体的情况，参考`--drop`
 - `-n`, `--no-suffix`：不加后缀到列名上
+- `--drop`, 对于匹配到其他染色体的variants，也选择丢掉；默认不丢掉并且更新。
 
 1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-k/--keep-unmapped` 可以自动过滤掉这些
 

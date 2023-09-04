@@ -207,6 +207,7 @@ def getParser():
         action="store_true",
         help="keep rows with unmapped and multiple positions.",
     )
+    parser.add_argument("--drop", dest="drop_unSameChromosome", action="store_true", help="drop if convert pos is not in the same chromosome. If input file is all in one chromosome, you should use this option.")
     parser.add_argument(
         "-n",
         "--no-suffix",
@@ -226,6 +227,7 @@ if __name__ == "__main__":
     delimter = args.delimter
     addLast = args.add_last
     keep_unmapped = args.keep_unmapped
+    drop = args.drop_unSameChromosome
     outputDelimter = "\t" if delimter is None else delimter
     no_suffix = args.no_suffix
 
@@ -315,12 +317,14 @@ if __name__ == "__main__":
                     new_chr = formatChr(new_chr, nochr=True)  # remove chr
                     if new_chr != chr:
                         notSameChr += 1
-                        if not keep_unmapped:
+                        if drop:
                             # continue
                             line_need_skip = True
                             break
                         else:
-                            new_pos = DEFAULT_NA
+                            # new_pos = DEFAULT_NA
+                            # new_pos = new_pos 
+                            line[input_cols[0] - 1] = new_chr # new_chr will replace old_chr
 
                 if not addLast:
                     line[each - 1] = new_pos
@@ -334,7 +338,8 @@ if __name__ == "__main__":
         else:
             sys.stdout.write(f"{ss}\n")
 
-
+if not drop:
+    sys.stderr.write(f"Warning drop is False, so if converted pos is not the same chr, the data will update, so if your data containes only one chromosome, make sure to filter it later!")
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
 sys.stderr.write(f"notSameChr count: {notSameChr}\n")
