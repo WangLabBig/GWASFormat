@@ -122,11 +122,41 @@ GWAS-Summary-Statistics/
 
 **step4:** 采用bgzip（**请注意对step3做完的数据重新bgzip**）和tabix进行数据压缩。
 
+`tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
+>[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转](#step4-tabix简易指南)
+
+
 **step5:** 构建pheweb需要的格式: `pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6`
 >必须要完成step1，然后直接接上该代码既可。
 
-`tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
->[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转](#step4-tabix简易指南)
+
+**示例代码**：
+
+1. 格式化bolt-lmm的输出，且基因组版本为GRCh38。
+
+bolt-lmm输出包含这些列：SNP     CHR     BP      GENPOS  ALLELE1 ALLELE0 A1FREQ  INFO    CHISQ_LINREG    P_LINREG        BETA    SE      CHISQ_BOLT_LMM_INF      P_BOLT_LMM_INF  CHISQ_BOLT_LMM  P_BOLT_LMM GWASTrait
+
+code:`zcat raw/invnorm_lvef.tsv.gz  |GWASFormat.py -i 2 3 5 6 11 12 7 P_BOLT_LMM --rsid 1 --variant-id 1| resetID2.py -i variant_id 1 2 3 4 -s | versionConvert.py -c hg19 hg38 /pmaster/xutingfeng/share/liftover_chain/hg19 -i 1 2 | sort -k1n -k2n | bgzip > invnorm_lvef.tsv.gz `
+
+1. 这里`GWASFormat.py`首先`-i`指定chr,pos,effect_allele, other_allele,beta, se, effect_allele_freq, p_value，然后`--rsid`以及`--variant-id` 指定snpID列
+
+2. 然后`resetID2.py` `-i` 传入需要更名的ID列的列名为`variant_id`，chr，pos，EA和OA。由于不知道谁是ref，`-s` 排序，并且加上`sorted_alleles`列名后缀在原始的`variant_id`上。
+
+3. 基因组版本转换`versionConvert.py`，`-c` 指定从hg19=>hg38，`-i` 指定chr和pos为第1列和第2列，并且第二列会加上基因组版本(`_hg38`)的后缀；然后接上sort进行排序 ，最后bgzip保存
+
+---
+现在产生meta file。`generateMetaFile.py -i yourfile` 
+
+由于已经sort了，故不加sort。这里工作极为繁琐，添加meta信息。
+>TODO：需要改进！
+
+2. regenie输出
+
+`zcat youfule|GWASFormat.py -i 1 2 5 4 BETA SE A1FREQ LOG10P --pval-type log10p -n N --variant-id ID` 
+
+> 是否需要resetID以及versionConver取决于你的数据。
+> 如果需要转成pheweb format：`zcat yourfile|pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6 --log10p|bgzip > outputfile`
+
 
 #### step3操作
 ##### 重命名variant_id
@@ -176,9 +206,9 @@ GWAS-Summary-Statistics/
 
 索引数据的方式如下：
 
-    1. 索引染色体的所有variants：`tabix yourfile.tsv.gz -h chromose_id`
+1. 索引染色体的所有variants：`tabix yourfile.tsv.gz -h chromose_id`
 
-    2. 索引指定区间：`tabix yourfile.tsv.gz -h chromosome:begin-end`，注意这里的chromosome必须是你的原始数据里面的写法，比如你的数据是chr1，chr2，就得这么写。对于[GWASFormat.py](#gwasformatpy)格式化的则是：1-25的数字。begin和end是`-b -e`指定的列的内容。因此对于我们格式化后的数据创建的tabix查询：`1:1234-5678`
+2. 索引指定区间：`tabix yourfile.tsv.gz -h chromosome:begin-end`，注意这里的chromosome必须是你的原始数据里面的写法，比如你的数据是chr1，chr2，就得这么写。对于[GWASFormat.py](#gwasformatpy)格式化的则是：1-25的数字。begin和end是`-b -e`指定的列的内容。因此对于我们格式化后的数据创建的tabix查询：`1:1234-5678`
 
 
 
