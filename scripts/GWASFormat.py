@@ -342,13 +342,11 @@ if __name__ == "__main__":
                 user_defined_dict = {
                     ss[key_idx - 1]: key_idx for key_idx in other_col_indices
                 }
+                conflict = set(user_defined_dict.keys()).intersection(
+                    set(column_mapping.keys())
+                )
                 if (
-                    len(
-                        conflict := set(user_defined_dict.keys()).intersection(
-                            set(column_mapping.keys())
-                        )
-                    )
-                    > 0
+                    len(conflict) > 0
                 ):  # avoid conflict columns between user defined and default
                     conflict_list = ",".join(conflict)
                     raise ValueError(
