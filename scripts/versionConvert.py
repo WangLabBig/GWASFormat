@@ -175,7 +175,12 @@ def getParser():
         action="store_true",
         help="keep rows with unmapped and multiple positions.",
     )
-    parser.add_argument("--drop", dest="drop_unSameChromosome", action="store_true", help="drop if convert pos is not in the same chromosome. If input file is all in one chromosome, you should use this option.")
+    parser.add_argument(
+        "--drop",
+        dest="drop_unSameChromosome",
+        action="store_true",
+        help="drop if convert pos is not in the same chromosome. If input file is all in one chromosome, you should use this option.",
+    )
     parser.add_argument(
         "-n",
         "--no-suffix",
@@ -214,7 +219,10 @@ if __name__ == "__main__":
 
     if len(input_cols) <= 1:
         raise ValueError("input cols error, please check, at least 1 col")
-
+    elif len(input_cols) >= 3 and not drop:
+        raise ValueError(
+            "input cols error, please check, if you are converting more than 1 postion col, you should use --drop option to avoid the not same chromosome problem, especially when the chrmosome of converted cols are different."
+        )
     # lifter[chrom][pos]
     line_idx = 1
     unmapped = 0
@@ -270,29 +278,30 @@ if __name__ == "__main__":
                     elif len(lifter_res) > 1:
                         # message = f"Warning: {chr}:{pos} convert to {query} version have multiple results, will return NA"
                         # sys.stderr.write(f"{message}\n")
-
-                    new_pos = DEFAULT_NA
-                    multiple += 1
-                    if not keep_unmapped:
-                        # continue
-                        line_need_skip = True
-                        break
-                else:
-                    # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
-                    # Waring: new_chr may not as same as chr
-                    new_chr, new_pos, new_strand = lifter_res[0]
-                    new_pos = str(new_pos)  # int => str
-                    new_chr = formatChrLiftover(new_chr, nochr=True)  # remove chr
-                    if new_chr != chr:
-                        notSameChr += 1
-                        if drop:
+                        new_pos = DEFAULT_NA
+                        multiple += 1
+                        if not keep_unmapped:
                             # continue
                             line_need_skip = True
                             break
-                        else:
-                            # new_pos = DEFAULT_NA
-                            # new_pos = new_pos 
-                            line[input_cols[0] - 1] = new_chr # new_chr will replace old_chr
+                    else:
+                        # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
+                        # Waring: new_chr may not as same as chr
+                        new_chr, new_pos, new_strand = lifter_res[0]
+                        new_pos = str(new_pos)  # int => str
+                        new_chr = formatChrLiftover(new_chr, nochr=True)  # remove chr
+                        if new_chr != chr:
+                            notSameChr += 1
+                            if drop:
+                                # continue
+                                line_need_skip = True
+                                break
+                            else:
+                                # new_pos = DEFAULT_NA
+                                # new_pos = new_pos
+                                line[
+                                    input_cols[0] - 1
+                                ] = new_chr  # new_chr will replace old_chr
 
                 except KeyError:
                     key_error += 1
@@ -315,7 +324,9 @@ if __name__ == "__main__":
             sys.stdout.write(f"{ss}\n")
 
 if not drop:
-    sys.stderr.write(f"Warning drop is False, so if converted pos is not the same chr, the data will update, so if your data containes only one chromosome, make sure to filter it later!")
+    sys.stderr.write(
+        f"Warning drop is False, so if converted pos is not the same chr, the data will update, so if your data containes only one chromosome, make sure to filter it later!"
+    )
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
 sys.stderr.write(f"notSameChr count: {notSameChr}\n")
