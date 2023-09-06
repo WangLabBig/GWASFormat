@@ -6,6 +6,7 @@
 @Author      :Tingfeng Xu
 @version      :1.0
 """
+import re
 import subprocess
 import sys
 import argparse
@@ -97,6 +98,11 @@ def formatChrLiftover(x, nochr=True):
             x = "MT"
 
         return x
+
+
+def is_valid_chromosome(input_str):
+    chrPattern = r"^(chr[XYMT0-9]{0,2}|[0-9]{1,2}|[XYMT]{0,2})$"
+    return re.match(chrPattern, input_str, re.IGNORECASE) is not None
 
 
 def getParser():
@@ -223,29 +229,32 @@ if __name__ == "__main__":
         raise ValueError(
             "input cols error, please check, if you are converting more than 1 postion col, you should use --drop option to avoid the not same chromosome problem, especially when the chrmosome of converted cols are different."
         )
-    # lifter[chrom][pos]
+
     line_idx = 1
     unmapped = 0
     multiple = 0
     key_error = 0
     notSameChr = 0
+    notChr = 0
+    notChrList = set()
     for line in sys.stdin:
         line = line.strip()  # remove \n
         line_need_skip = False
         if line_idx == 1:
             header = line.split(delimter)
 
-            # parse order list with col_idx or col_name
-            input_cols = [header_mapper(x, header) for x in input_cols]
+            input_cols = [
+                header_mapper(x, header) for x in input_cols
+            ]  # parse order list with col_idx or col_name
 
-            if not no_suffix:
+            if not no_suffix:  # keep suffix
                 newCols = [
                     f"{header[x-1]}_{query}" for x in input_cols[1:]
                 ]  # input_cols = [chr, pos1, pos2, ...]
-            else:  # no_suffix
+            else:  # drop suffix
                 newCols = [f"{header[x-1]}" for x in input_cols[1:]]
 
-            if addLast:
+            if addLast:  # add last for header
                 header += newCols
             else:
                 for idx, new_header in zip(input_cols[1:], newCols):
@@ -261,57 +270,55 @@ if __name__ == "__main__":
             )  # liftover only support 1, 2 ... not chr1 ...
             for each in input_cols[1:]:
                 pos = int(line[each - 1])
-                # TODO: chrX和chrY的处理
+
                 try:  # key is ok
                     lifter_res = lifter[chr][pos]
-                    # TODO: warnning message passed to stderr
-                    if len(lifter_res) == 0:
-                        # message = f"Warning: {chr}:{pos} can not convert to {query} version, will return NA"
-                        # sys.stderr.write(f"{message}\n")
 
+                    if len(lifter_res) == 0:  # unmapped
                         unmapped += 1
                         new_pos = DEFAULT_NA
-                        if not keep_unmapped:
+                        if not keep_unmapped:  # drop if not keep_unmapped
                             line_need_skip = True
                             # continue
                             break
-                    elif len(lifter_res) > 1:
-                        # message = f"Warning: {chr}:{pos} convert to {query} version have multiple results, will return NA"
-                        # sys.stderr.write(f"{message}\n")
+                    elif len(lifter_res) > 1:  # multiple mapped
                         new_pos = DEFAULT_NA
                         multiple += 1
-                        if not keep_unmapped:
+                        if not keep_unmapped:  # drop if not keep_unmapped
                             # continue
                             line_need_skip = True
                             break
                     else:
-                        # TODO: new_chr 是否和原始chr一致？ strand信息是否需要输出
-                        # Waring: new_chr may not as same as chr
                         new_chr, new_pos, new_strand = lifter_res[0]
                         new_pos = str(new_pos)  # int => str
                         new_chr = formatChrLiftover(new_chr, nochr=True)  # remove chr
-                        if new_chr != chr:
-                            notSameChr += 1
-                            if drop:
-                                # continue
-                                line_need_skip = True
-                                break
-                            else:
-                                # new_pos = DEFAULT_NA
-                                # new_pos = new_pos
-                                line[
-                                    input_cols[0] - 1
-                                ] = new_chr  # new_chr will replace old_chr
 
-                except KeyError:
+                        if is_valid_chromosome(
+                            str(new_chr)
+                        ):  # not contig or something else
+                            if new_chr != chr:  # not same chromosome
+                                notSameChr += 1
+
+                                if drop:  # drop if not same chromosome
+                                    line_need_skip = True
+                                    break
+                                else:  # update new chromosome
+                                    line[input_cols[0] - 1] = new_chr
+                        else:  # new chr is a contig or something else which is non default chromosome; will skip
+                            notChr += 1
+                            notChrList.add(new_chr)
+                            line_need_skip = True
+                            break
+
+                except KeyError:  # key error if not in lifter chain file
                     key_error += 1
                     new_pos = DEFAULT_NA
-                    if not keep_unmapped:
+                    if not keep_unmapped:  # drop if not keep_unmapped
                         # continue
                         line_need_skip = True
                         break
 
-                if not addLast:
+                if not addLast:  # update pos in original cols if not add last
                     line[each - 1] = new_pos
                 else:
                     line.append(new_pos)
@@ -325,12 +332,18 @@ if __name__ == "__main__":
 
 if not drop:
     sys.stderr.write(
-        f"Warning drop is False, so if converted pos is not the same chr, the data will update, so if your data containes only one chromosome, make sure to filter it later!"
+        f"Warning drop is False, so if converted pos is not the same chr, the data will update, so if your data containes only one chromosome, make sure to filter it later!\n"
     )
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
 sys.stderr.write(f"notSameChr count: {notSameChr}\n")
 sys.stderr.write(f"key_error count: {key_error}\n")
+sys.stderr.write(f"notChr count: {notChr}\n")
+
+if len(notChrList) > 0:
+    sys.stderr.write(
+        "Undefault chromosome list:" + ",".join(list(notChrList)[:5]) + "\n"
+    )
 if unmapped >= line_idx / 100:
     sys.stderr.write(
         "Warning: over 1% of the input lines are unmapped, please check your target and query version\n"
@@ -346,6 +359,10 @@ if notSameChr >= line_idx / 100:
 if key_error >= line_idx / 100:
     sys.stderr.write(
         "Warning: over 1% of the input lines are key error, please check your data of chr is consistent with your target and query genome version\n"
+    )
+if notChr >= line_idx / 100:
+    sys.stderr.write(
+        "Warning: over 1% of the input lines are not default chromosome, please check your data of chr is consistent with your target and query genome version\n"
     )
 
 sys.stdout.close()
