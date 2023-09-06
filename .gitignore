@@ -5,7 +5,8 @@ gwas-summary-statistics-standard*
 __pycache__/
 *.py[cod]
 *$py.class
-
+test/*
+test.*
 # C extensions
 *.so
 
