@@ -193,7 +193,7 @@ def getParser():
         action="store_true",
         help="Do not add suffix to the column names.",
     )
-    parser.add_argumen(
+    parser.add_argument(
         "--no-header",
         dest="no_header",
         action="store_true",
@@ -235,7 +235,9 @@ if __name__ == "__main__":
             "input cols error, please check, if you are converting more than 1 postion col, you should use --drop option to avoid the not same chromosome problem, especially when the chrmosome of converted cols are different."
         )
 
-    line_idx = 1 if args.no_header else 2  # header idx
+    line_idx = 2 if args.no_header else 1  # header idx
+    if line_idx == 2:
+        input_cols = [int(x) for x in input_cols]  # convert str to int
     unmapped = 0
     multiple = 0
     key_error = 0
@@ -338,6 +340,10 @@ if __name__ == "__main__":
 if not drop:
     sys.stderr.write(
         f"Warning drop is False, so if converted pos is not the same chr, the data will update, so if your data containes only one chromosome, make sure to filter it later!\n"
+    )
+if args.no_header:
+    sys.stderr.write(
+        f"Warning no_header is True, so the input file should not contain header, and the input_cols should be the col index, not col name!\n"
     )
 sys.stderr.write(f"unmapped count: {unmapped}\n")
 sys.stderr.write(f"multiple count: {multiple}\n")
