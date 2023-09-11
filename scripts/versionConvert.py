@@ -6,14 +6,14 @@
 @Author      :Tingfeng Xu
 @version      :1.0
 """
+import argparse
+import os.path as osp
 import re
 import subprocess
 import sys
-import argparse
-import warnings
 import textwrap
+import warnings
 from signal import SIG_DFL, SIGPIPE, signal
-import os.path as osp
 
 DEFAULT_NA = "NA"
 
@@ -24,8 +24,7 @@ signal(
 
 # 检查是否已安装liftover模块
 try:
-    from liftover import ChainFile
-    from liftover import get_lifter
+    from liftover import ChainFile, get_lifter
 except ImportError:
     print("缺少liftover模块，开始安装...")
     try:
@@ -194,6 +193,12 @@ def getParser():
         action="store_true",
         help="Do not add suffix to the column names.",
     )
+    parser.add_argumen(
+        "--no-header",
+        dest="no_header",
+        action="store_true",
+        help="No header and not support for col name in the input",
+    )
 
     return parser
 
@@ -230,7 +235,7 @@ if __name__ == "__main__":
             "input cols error, please check, if you are converting more than 1 postion col, you should use --drop option to avoid the not same chromosome problem, especially when the chrmosome of converted cols are different."
         )
 
-    line_idx = 1
+    line_idx = 1 if args.no_header else 2  # header idx
     unmapped = 0
     multiple = 0
     key_error = 0
