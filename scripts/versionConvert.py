@@ -34,7 +34,6 @@ except ImportError:
         print("安装liftover模块时出错。请手动安装liftover。")
         sys.exit(1)
 
-
 def header_mapper(string, header_col):
     """
     Map a header string or index to a column index.
@@ -261,7 +260,7 @@ if __name__ == "__main__":
             else:  # drop suffix
                 newCols = [f"{header[x-1]}" for x in input_cols[1:]]
 
-            if addLast:  # add last for header
+            if addLast:  # add last fo header
                 header += newCols
             else:
                 for idx, new_header in zip(input_cols[1:], newCols):
