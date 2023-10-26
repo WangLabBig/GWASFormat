@@ -1,12 +1,10 @@
 # GWAS summary file format v0.1
 
-GWAS summary file 存储按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-statistics-standard)进行存储
-
-meta file 部分按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-statistics-standard)进行存储。
+GWAS summary file与meta file部分按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-statistics-standard)进行存储
 
 与[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-statistics-standard)的区别：
 
-1. 文件名按照我们定义
+1. 重新定义了文件名
 2. meta file 中的field增加了：`url`、`reference`、`project_shortname`
 
 如果不了解文件格式[请阅读文件格式要求](#introduction)
@@ -17,8 +15,8 @@ WangLabGWAS数据存储路径位于文件服务器：`/data/share/wanglab/GWAS-S
 
 ## Introduction
 对于一个表型的GWAS summary，我们应当保存两个文件：
-1. `phenotype_ancestry_year_build_projectName.tsv.gz`  summary text foramat
-2. `phenotype_ancestry_year_build-meta.yaml ` meta file， 记录其他额外的信息
+1. `phenotype_ancestry_year_build_projectName.tsv.gz`  （summary text format，GWAS文件）
+2. `phenotype_ancestry_year_build-meta.yaml ` （meta file，记录其他额外的信息）
 
 文件存储结构：
 ```
@@ -32,8 +30,8 @@ GWAS-Summary-Statistics/
 
 下面进行详细介绍
 ### GWAS summary file
-文件名命名应当按照以下标准进行命名
-`phenotype_ancestry_year_build_projectName.tsv.gz`  summary text foramat
+文件名命名应当按照以下标准进行命名：
+`phenotype_ancestry_year_build_projectName.tsv.gz`
 
 - `phenotype` 对应数据的表型，该值也对应`meta file`中的`trait_description` field.
 - `ancestry` 对应数据的族裔来源，该值也对应`meta file`中的`samples_ancestry` field.
@@ -88,23 +86,23 @@ GWAS-Summary-Statistics/
 
 ### Installation
 
-**Requirments**: `python>3.7`
+**Requirments**: `python>3.7` `liftover`
 
->如果使用[versionConvert.py](#versionconvertpy)，则需要`pip install liftover`
+`pip install liftover`
 
 **下载源码**
 
 `git clone git@github.com:WangLabBig/GWASFormat.git`
 
-
-
 直接添加`scripts`到环境变量
 
-`export PATH=$PATH:yourpath/scripts`
+`export PATH=$PATH:/PATH_TO_GWASFORMAT/scripts`
 
 ### Pipline
 
 代码存放于[Wanglab_GWASFormat](https://github.com/WangLabBig/GWASFormat)，本地服务器路径如下：
+
+`/pmaster/xutingfeng/share/GWASFormatter/scripts`
 
 >[详细参数介绍](#API)
 
@@ -125,41 +123,38 @@ GWAS-Summary-Statistics/
 `tabix -b 2 -e 2 -s 1 -c c -f youfile.tsv.gz` 
 >[tabix](https://www.htslib.org/doc/tabix.html)的简单操作指南请[点击该链接跳转](#step4-tabix简易指南)
 
-
 **step5:** 构建pheweb需要的格式: `pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6`
 >必须要完成step1，然后直接接上该代码既可。
 
 
-**示例代码**：
+### 示例代码：
 
-1. 格式化bolt-lmm的输出，且基因组版本为GRCh38。
+#### 示例1：格式化bolt-lmm的输出，且基因组版本为GRCh38。
 
 bolt-lmm输出包含这些列：SNP     CHR     BP      GENPOS  ALLELE1 ALLELE0 A1FREQ  INFO    CHISQ_LINREG    P_LINREG        BETA    SE      CHISQ_BOLT_LMM_INF      P_BOLT_LMM_INF  CHISQ_BOLT_LMM  P_BOLT_LMM GWASTrait
 
 code:`zcat raw/invnorm_lvef.tsv.gz  |GWASFormat.py -i 2 3 5 6 11 12 7 P_BOLT_LMM --rsid 1 --variant-id 1| resetID2.py -i variant_id 1 2 3 4 -s | versionConvert.py -c hg19 hg38 /pmaster/xutingfeng/share/liftover_chain/hg19 -i 1 2 | sort -k1n -k2n | bgzip > invnorm_lvef.tsv.gz `
 
-1. 这里`GWASFormat.py`首先`-i`指定chr,pos,effect_allele, other_allele,beta, se, effect_allele_freq, p_value，然后`--rsid`以及`--variant-id` 指定snpID列
+（1）这里`GWASFormat.py`首先`-i`指定chr,pos,effect_allele, other_allele,beta, se, effect_allele_freq, p_value，然后`--rsid`以及`--variant-id` 指定snpID列
 
-2. 然后`resetID2.py` `-i` 传入需要更名的ID列的列名为`variant_id`，chr，pos，EA和OA。由于不知道谁是ref，`-s` 排序，并且加上`sorted_alleles`列名后缀在原始的`variant_id`上。
+（2）然后`resetID2.py` `-i` 传入需要更名的ID列的列名为`variant_id`，chr，pos，EA和OA。`-s`对id中的两个allele排序，并且加上`sorted_alleles`列名后缀在原始的`variant_id`上。
 
-3. 基因组版本转换`versionConvert.py`，`-c` 指定从hg19=>hg38，`-i` 指定chr和pos为第1列和第2列，并且第二列会加上基因组版本(`_hg38`)的后缀；然后接上sort进行排序 ，最后bgzip保存
+（3）基因组版本转换`versionConvert.py`，`-c` 指定从hg19=>hg38，并在后面附上hg19转换至hg38的chain文件目录。`-i` 指定chr和pos为第1列和第2列，并且第二列会加上基因组版本(`_hg38`)的后缀；然后接上sort进行排序 ，最后bgzip保存
 
----
 现在产生meta file。`generateMetaFile.py -i yourfile` 
 
-由于已经sort了，故不加sort。这里工作极为繁琐，添加meta信息。
->TODO：需要改进！
-
-2. regenie输出
+#### 示例2：regenie输出
 
 `zcat youfule|GWASFormat.py -i 1 2 5 4 BETA SE A1FREQ LOG10P --pval-type log10p -n N --variant-id ID` 
 
-> 是否需要resetID以及versionConver取决于你的数据。
-> 如果需要转成pheweb format：`zcat yourfile|pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6 --log10p|bgzip > outputfile`
+> 是否需要resetID以及versionConvert取决于你的数据。
+> 如果需要转成pheweb format：
+`zcat yourfile|pheweb_format.py -i 1 2 4 3 8 --af 7 --beta 5 --sebeta 6 --log10p|bgzip > outputfile`
 
+### 上述操作部分注释
 
 #### step3操作
-##### 重命名variant_id
+
 [resetID2.py](#resetid2py) 用于重命名variant_id
 
 `cat yourfile | resetID2.py -i variant_id 1 2 ref alt -s --add-chr`
@@ -170,17 +165,16 @@ code:`zcat raw/invnorm_lvef.tsv.gz  |GWASFormat.py -i 2 3 5 6 11 12 7 P_BOLT_LMM
 
 `cat yourfile | versionConvert.py -c hg19 hg38 chainFileDir -i 1 2`
 
-这条代码会把第一列处理成染色体，第二列处理成对应的位置，如1,2就对应了一个variants的坐标，`-c hg19 hg38 chainFileDir`就指明了从hg19=>hg38的版本转换
+这条代码会根据-i输入的列号把第一列处理成染色体，第二列处理成对应的位置，这些信息组成了一个variants的坐标，`-c hg19 hg38 chainFileDir`就指明了从hg19=>hg38的版本转换
 >**⚠️注意：** 
 > 
 >1. 默认是会把没匹配的、匹配到多个位置的行的pos丢掉，`-k/--keep-unmapped` 可以保留这些
 >
->2. 默认是新的pos替换原来的并且加上后缀：`_hg38`;`--no-suffix`会去掉后缀，`--add-last`会不覆盖转而在最后面加上新的列
+>2. liftover后的新位置信息会在原位置替换旧的信息，并在标题上加上后缀：`_hg38`。`--no-suffix`会去掉后缀，`--add-last`会不覆盖旧的位置信息，而在最后面加上新的位置信息列
 
 #### step4 tabix简易指南
-##### idx创建
 
-**一条龙创建idx：**`tabix -s chr -b start -e end -c comment yourfile.tsv.gz`
+**一条龙创建index：**`tabix -s chr -b start -e end -c comment yourfile.tsv.gz`
 
 下面进行参数介绍与指北~
 
@@ -191,7 +185,7 @@ code:`zcat raw/invnorm_lvef.tsv.gz  |GWASFormat.py -i 2 3 5 6 11 12 7 P_BOLT_LMM
 
 因此衍生出来的几种管理数据的思路如下
 
-###### 第一种情况：
+##### 第一种情况：
 
 | chromosome | base_pair_location | effect_allele | other_allele |
 | ---------- | ------------------ | ------------- | ------------ |
@@ -208,11 +202,16 @@ code:`zcat raw/invnorm_lvef.tsv.gz  |GWASFormat.py -i 2 3 5 6 11 12 7 P_BOLT_LMM
 
 1. 索引染色体的所有variants：`tabix yourfile.tsv.gz -h chromose_id`
 
-2. 索引指定区间：`tabix yourfile.tsv.gz -h chromosome:begin-end`，注意这里的chromosome必须是你的原始数据里面的写法，比如你的数据是chr1，chr2，就得这么写。对于[GWASFormat.py](#gwasformatpy)格式化的则是：1-25的数字。begin和end是`-b -e`指定的列的内容。因此对于我们格式化后的数据创建的tabix查询：`1:1234-5678`
+2. 索引指定区间：`tabix yourfile.tsv.gz -h chromosome:begin-end`
+
+>注意这里的chromosome的写法，如果用于构建索引的数据文件中chromosome的编号格式是chr1、chr2这样的形式，在索引时也需要使用：
+>`tabix yourfile.tsv.gz -h chr1:123-12345`
+>对于使用[GWASFormat.py](#gwasformatpy)格式化后的数据，需使用1-25的数字作为染色体编号，23、24、25表示X染色体、Y染色体、MT染色体。因此对于我们格式化后的数据创建的tabix查询：
+》`tabix yourfile.tsv.gz -h 1:123-12345`
 
 
 
-###### 第二种情况：
+##### 第二种情况：
 
 
 | #fid | eid   | 1000017 | 1000025 |
@@ -241,7 +240,7 @@ code:`zcat raw/invnorm_lvef.tsv.gz  |GWASFormat.py -i 2 3 5 6 11 12 7 P_BOLT_LMM
                      [--ref_allele REF_ALLELE] [-n N]
                      [--other_col OTHER_COL [OTHER_COL ...]]
 
-
+**选项**
 - `-h, --help`: 显示帮助信息并退出。
 
 - `-i COL_INDICES [COL_INDICES ...], --col COL_INDICES [COL_INDICES ...]`: 指定以下数据字段的列：
@@ -306,6 +305,12 @@ cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4
 
 **用法:** generateMetaFile.py [-h] -i INPUT [-s]
 
+**选项:**
+
+- `-h`, `--help`: 显示帮助信息并退出。
+- `-i INPUT`, `--input INPUT`: 输入的元数据文件。
+- `-s`, `--check_sort`: 检查文件是否已排序。
+
 **描述:**
 
 本脚本用于为GWAS总结文件生成元数据文件。
@@ -315,7 +320,7 @@ cat yourfile | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_col -2 -4
 GWAS SSF: [https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1](https://www.biorxiv.org/content/10.1101/2022.07.15.500230v1)
 GWAS SSF 版本: GWAS-SSF v0.1
 
-**代码版本:** 1.0
+**版本:** 1.0
 
 **示例代码:**
 
@@ -327,18 +332,23 @@ GWAS SSF 版本: GWAS-SSF v0.1
 
 `generateMetaFile.py -i yourfile -s`
 
-
-**选项:**
-
-- `-h`, `--help`: 显示帮助信息并退出。
-- `-i INPUT`, `--input INPUT`: 输入的元数据文件。
-- `-s`, `--check_sort`: 检查文件是否已排序。
-
-
 ### resetID2.py
 
 **用法:** resetID2.py [-h] [-i COL_ORDER [COL_ORDER ...]] [-k] [-s]
                      [-d DELIMITER] [--add-chr] [-I ID_DELIMITER]
+
+**选项:**
+
+- `-h`, `--help`: 显示帮助信息并退出。
+- `-i COL_ORDER [COL_ORDER ...]`, `--col_order COL_ORDER [COL_ORDER ...]`:
+指定ID、chr、pos、ref、alt的列顺序。默认为ID列=2，chr列=1，pos列=4，ref列=5，alt列=6。列索引从1开始。如果格式已经按照这个顺序排列，您可以直接使用 `-i 3` 进行后续操作。您可以在此处指定索引或列名。
+- `-k`, `--keep`: 在输出中保留原始rsID。
+- `-s`, `--sort`: 使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序，并且会添加 `_sorted_alleles`到原始的列名之后
+- `-d DELIMITER`, `--delimiter DELIMITER`:
+输入文件的分隔符。默认为任意空白字符。
+- `--add-chr`: 在ID的chr列添加'chr'前缀。
+- `-I ID_DELIMITER`, `--id-delimiter ID_DELIMITER`:
+ID的分隔符。默认为':'。这会控制输出ID的分隔符。如果`-i`只有一个参数，并且应用了'chr'或排序操作，则此分隔符将用于将旧ID分割为chr、pos、ref、alt。
 
 **描述:**
 
@@ -366,19 +376,6 @@ GWAS SSF 版本: GWAS-SSF v0.1
 
 3. 重命名 'variant_id' 列，使用排序和'chr'前缀，并使用'\_'作为id_delimiter：`cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`这将会重命名 'variant_id' 列，并将其格式化为chr:pos:ref:alt，对ref和alt等位基因进行排序，并且添加 `_sorted_alleles`到原始的列名之后，然后在chr列添加'chr'前缀，同时使用'_'作为分隔符。
 
-**选项:**
-
-- `-h`, `--help`: 显示帮助信息并退出。
-- `-i COL_ORDER [COL_ORDER ...]`, `--col_order COL_ORDER [COL_ORDER ...]`:
-指定ID、chr、pos、ref、alt的列顺序。默认为ID列=2，chr列=1，pos列=4，ref列=5，alt列=6。列索引从1开始。如果格式已经按照这个顺序排列，您可以直接使用 `-i 3` 进行后续操作。您可以在此处指定索引或列名。
-- `-k`, `--keep`: 在输出中保留原始rsID。
-- `-s`, `--sort`: 使用 `sorted([ref, alt])` 对ref和alt等位基因进行排序，并且会添加 `_sorted_alleles`到原始的列名之后
-- `-d DELIMITER`, `--delimiter DELIMITER`:
-输入文件的分隔符。默认为任意空白字符。
-- `--add-chr`: 在ID的chr列添加'chr'前缀。
-- `-I ID_DELIMITER`, `--id-delimiter ID_DELIMITER`:
-ID的分隔符。默认为':'。这会控制输出ID的分隔符。如果`-i`只有一个参数，并且应用了'chr'或排序操作，则此分隔符将用于将旧ID分割为chr、pos、ref、alt。
-
 ### versionConvert.py
 
 **用法：**
@@ -386,17 +383,6 @@ ID的分隔符。默认为':'。这会控制输出ID的分隔符。如果`-i`只
 ```bash
 versionConvert.py [-h] [-c CHAIN [CHAIN ...]] -i INPUT_COLS [INPUT_COLS ...] [-l] [-s DELIMTER] [-d]
 ```
-
-**描述：**
-
-本工具通过Liftover进行基因组位置转换。
-
-**作者:** Tingfeng Xu (xutingfeng@big.ac.cn)
-**版本:** 1.0
-
-此工具允许您使用Liftover将基因组位置从一种版本转换为另一种版本。
-
-默认情况下，输入文件假定具有标题。
 
 **选项：**
 
@@ -412,6 +398,17 @@ versionConvert.py [-h] [-c CHAIN [CHAIN ...]] -i INPUT_COLS [INPUT_COLS ...] [-l
 1. 默认是会把没匹配的、匹配到多个位置的行的pos输出成NA，`-k/--keep-unmapped` 可以自动过滤掉这些
 
 2. 默认是新的pos替换原来的并且加上后缀：`_hg38`;`--no-suffix`会去掉后缀，`--add-last`会不覆盖转而在最后面加上新的列
+
+**描述：**
+
+本工具通过Liftover进行基因组位置转换。
+
+**作者:** Tingfeng Xu (xutingfeng@big.ac.cn)
+**版本:** 1.0
+
+此工具允许您使用Liftover将基因组位置从一种版本转换为另一种版本。
+
+默认情况下，输入文件假定具有标题。
 
 **使用示例：**
 1. 将位置从hg19转换为hg38并自动下载链文件：
