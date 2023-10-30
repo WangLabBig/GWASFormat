@@ -1,5 +1,7 @@
 # GWAS summary file format v0.1
 
+:point_right: [使用流程请点这里](#pipline)
+ 
 GWAS summary file与meta file部分按照[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-statistics-standard)进行存储
 
 与[GWAS SSF v1.0](https://github.com/EBISPOT/gwas-summary-statistics-standard)的区别：
@@ -39,9 +41,12 @@ GWAS-Summary-Statistics/
 - `build` 对应数据的采用的基因组版本，该值也对应`meta file`中的`genome_assembly` field.
 - `project_shortname` 对应数据的项目来源缩写，用于区分前四个文件名field相同的情况，该值也对应`meta file`中的`project_shortname` field.
 
+Example Name: `cad_white_2022_GRCh38_NG.tsv.gz`
 
 ### GWAS summary meta file
 目前采用[yaml]()存储meta 信息，命名规则为：`filename`+`-meta.yaml`。`filename`为GWAS summary file的文件名。
+
+:warning:  Note:**使用generateMetaFile.py** 可以快速生成！！！
 
 该文件主要用于存放相关的样本大小、md5、是否sort等信息，具体[field](#field)请点击链接。
 
@@ -88,7 +93,7 @@ GWAS-Summary-Statistics/
 
 **Requirments**: `python>3.7` `liftover`
 
-`pip install liftover`
+> run `pip install liftover`
 
 **下载源码**
 
