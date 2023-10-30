@@ -25,9 +25,9 @@ WangLabGWAS数据存储路径位于文件服务器：`/data/share/wanglab/GWAS-S
 GWAS-Summary-Statistics/
 └── trait/
     ├── phenotype_ancestry_year_build_projectName1.tsv.gz
-    ├── phenotype_ancestry_year_build_projectName-meta1.yaml
+    ├── phenotype_ancestry_year_build_projectName-meta.yaml
     ├── phenotype_ancestry_year_build_projectName2.tsv.gz
-    └── phenotype_ancestry_year_build_projectName-meta2.yaml
+    └── phenotype_ancestry_year_build_projectName-meta.yaml
 ```
 
 下面进行详细介绍
