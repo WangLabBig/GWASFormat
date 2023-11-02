@@ -15,7 +15,7 @@ from pyfaidx import Fasta
 def getParser():
     parser = argparse.ArgumentParser(
         description="""
-        A script to judge genome version. Developed by Xingyu Chen(chenxy@big.ac.cn)
+        A script to check genome build. Developed by Xingyu Chen(chenxy@big.ac.cn)
 
         Version:1.0
 
@@ -24,11 +24,11 @@ def getParser():
             2.the chrname of fasta file should be consistent with input file. e.g.">chr1 GRCh37:1:1:249250621:1" for fasta header, and "chr1 12231 A T" for input file
             3.Before run this script, it is recommended to remove multiple base pair data. If the matching rate is under 0.9 but more than 0.7, you could try to remove Polymorphic Loci and increase --snp_num to get a solid result.
             4.No need to figure out which column is actually A1 and A2.
-            5.You could use -i flag to specify a file with each line contain a file address that need to judge version, or use -f flag to specify a single file to calculate.
+            5.You could use -i flag to specify a file with each line contain a file address that need to check genome build, or use -f flag to specify a single file to calculate.
 
         Example code:
-            python judge_version.py -i testdata/index_file -c 1 -p 3 -r 4 -a 5 --header --ref GRCh38ref.fasta
-            python judge_version.py -f tmpfile_judgeversion -c 1 -p 2 -r 3 -a 4 --header --ref Homo_sapiens_assembly19.fasta
+            python check_genome_build.py -i testdata/index_file -c 1 -p 3 -r 4 -a 5 --header --ref GRCh38ref.fasta
+            python check_genome_build.py -f input_file -c 1 -p 2 -r 3 -a 4 --header --ref Homo_sapiens_assembly19.fasta
 
         """
     )
@@ -216,10 +216,10 @@ if __name__ == "__main__":
     for n in range(len(parse_file_array)):
         if matching_rate_array[n] >= 0.9:
             print("The matching rate of file " + str(input_file_array[n]) + "is " + str(matching_rate_array[n]) )
-            print("the version of this file is consistent with the reference genome version")
+            print("the genome build of this file is consistent with the reference genome build")
         elif matching_rate_array[n] <0.9 and matching_rate_array[n] >= 0.7:
             print("The matching rate of file " + str(input_file_array[n]) + "is " + str(matching_rate_array[n]) )
-            print("the version of this file may consistent with the reference genome version. The low matching rate may due to too many Polymorphic Loci")
+            print("the genome build of this file may consistent with the reference genome build. The low matching rate may due to too many Polymorphic Loci")
         elif matching_rate_array[n] <0.7:
             print("The matching rate of file " + str(input_file_array[n]) + "is " + str(matching_rate_array[n]) )
-            print("the version of this file is not match with the reference genome version. please try other reference genome version")
+            print("the genome build of this file is not match with the reference genome build. please try other reference genome build")
