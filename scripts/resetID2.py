@@ -50,6 +50,7 @@ def getParser():
                `cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`
                This renames the 'variant_id' column and formats it as chr:pos:ref:alt, 
                sorts ref and alt alleles, and adds 'chr' prefix to chr column.
+            4. if the format is by GWASFormat then `resetID2.py -i variant_id 1 2 4 3` is ok 
             """
         ),
     )
