@@ -9,6 +9,7 @@
 """
 
 import argparse
+import textwrap
 
 try:
     from pyfaidx import Fasta
@@ -27,7 +28,9 @@ except ImportError:
 ###Define function
 def getParser():
     parser = argparse.ArgumentParser(
-        description="""
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(
+            """
         A script to check genome build. Developed by Xingyu Chen(chenxy@big.ac.cn)
 
         Version:1.0
@@ -44,6 +47,7 @@ def getParser():
             python check_genome_build.py -f input_file -c 1 -p 2 -r 3 -a 4 --header --ref Homo_sapiens_assembly19.fasta
 
         """
+        ),
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
