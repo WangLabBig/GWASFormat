@@ -7,10 +7,10 @@
 @version      :1.0
 """
 import argparse
-import os.path as osp
+
 import re
-import subprocess
 import sys
+
 import textwrap
 import warnings
 from signal import SIG_DFL, SIGPIPE, signal
@@ -26,13 +26,19 @@ signal(
 try:
     from liftover import ChainFile, get_lifter
 except ImportError:
+    import subprocess
+    import sys
+
     print("缺少liftover模块，开始安装...")
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "liftover"], check=True)
         print("liftover模块安装完成。")
+        from liftover import ChainFile, get_lifter
+
     except subprocess.CalledProcessError:
         print("安装liftover模块时出错。请手动安装liftover。")
         sys.exit(1)
+
 
 def header_mapper(string, header_col):
     """
