@@ -208,7 +208,7 @@ if __name__ == "__main__":
                     formated_ss.append(str(math.pow(10, -float(ss[v]))))
                 else:
                     formated_ss.append(ss[v])
-
+        formated_ss = "\t".join(formated_ss)
         sys.stdout.write(f"{formated_ss}\n")
         line_idx += 1
             
