@@ -101,6 +101,7 @@ def getParser():
         default=":",
         help="Delimiter for the ID. Default: ':'. This controls the delimiter for the output ID. If `-i` has only one parameter and 'chr' or sorting operations are applied, this delimiter will be used to split the oldID into chr, pos, ref, alt.",
     )
+    parser.add_argument('--no-header', dest='no_header', action='store_true', help='Input file has no header.')
 
     return parser
 
@@ -297,7 +298,7 @@ if __name__ == "__main__":
     addChr = args.add_chr
     # check header and comments
 
-    line_idx = 1
+    line_idx = 2 if args.no_header else 1 # 2 will drop to find header 
     for line in sys.stdin:
         line = line.strip()  # remove \n
         if line_idx == 1:
