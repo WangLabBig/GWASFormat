@@ -245,7 +245,7 @@ def resetID2(
     ss = line.split(delimter)
 
     if len(orderList) == 1:  # only for add chr or sort or do nothing~
-        idCol = header_mapper(orderList[0], header)
+        idCol = header_mapper(orderList[0], header) if header else int(orderList[0])
         oldID = ss[idCol - 1]
         chr, pos, A0, A1 = oldID.split(ID_delimter)
         pass
@@ -300,6 +300,13 @@ if __name__ == "__main__":
 
     line_idx = 2 if args.no_header else 1 # 2 will drop to find header 
     header = None
+
+    if args.no_header:
+        try:
+            orderList = [int(x) for x in orderList]
+        except:
+            raise ValueError("if no header, the orderList should be int not str")
+
     for line in sys.stdin:
         line = line.strip()  # remove \n
         if line_idx == 1:
