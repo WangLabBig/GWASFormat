@@ -179,6 +179,8 @@ def check_pvalue_cols(name):
 
 import math 
 
+ID_error_msg = {}
+
 if __name__ == "__main__":
     parser = getParser()
     args = parser.parse_args()
@@ -209,13 +211,26 @@ if __name__ == "__main__":
                     format_ss.append(str(math.log(float(current_value))))
                 elif v == 7 and turn_pvalue_flag == 1:
                     format_ss.append(str(math.pow(10, -float(current_value))))
+                elif v == 10 and current_value == NA:
+                    variant_id = ss[11]  # 11 is variant_id
+                    USE_VARIANT_ID = True
+                    if variant_id == Default_NA:
+                        SOME_VARIANT_ID_NA = True
+                        format_ss.append(NA)  # variant_id is NA ,too 
+                    else:
+                        format_ss.append(variant_id) # variant_id exists
+
+
                 else:
                     format_ss.append(current_value)
         format_ss = "\t".join(format_ss)
         sys.stdout.write(f"{format_ss}\n")
         line_idx += 1
             
-
+if USE_VARIANT_ID:
+    sys.stderr.write("some rsid is NA, will use variant_id instead\n")
+if SOME_VARIANT_ID_NA:
+    sys.stderr.write("some rsid and variant_id is NA, please check your data!!!!\n")
                                         
             
 
