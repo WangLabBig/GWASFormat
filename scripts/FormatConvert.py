@@ -26,7 +26,7 @@ import textwrap
 from signal import SIG_DFL, SIGPIPE, signal
 import math
 
-
+Default_NA = "#NA"  # default NA for gwasformat
 warnings.filterwarnings("ignore")
 signal(
     SIGPIPE, SIG_DFL
@@ -150,6 +150,7 @@ cojo_mapping = {
 
 
 supported_format={"cojo":cojo_mapping}
+NA_format = {"cojo": "NA"}
 
 def check_beta_cols(name):
     """
@@ -185,6 +186,7 @@ if __name__ == "__main__":
 
 
     column_mapping = supported_format[args.format]
+    NA = NA_format.get(args.format, "NA")
 
 
     line_idx = 1
@@ -201,12 +203,14 @@ if __name__ == "__main__":
 
         else:
             for k, v in column_mapping.items():
+                current_value = ss[v]
+                current_value = current_value if current_value != Default_NA else NA
                 if v == 4 and turn_beta_flag == 0: # log OR 
-                    format_ss.append(str(math.log(float(ss[v]))))
+                    format_ss.append(str(math.log(float(current_value))))
                 elif v == 7 and turn_pvalue_flag == 1:
-                    format_ss.append(str(math.pow(10, -float(ss[v]))))
+                    format_ss.append(str(math.pow(10, -float(current_value))))
                 else:
-                    format_ss.append(ss[v])
+                    format_ss.append(current_value)
         format_ss = "\t".join(format_ss)
         sys.stdout.write(f"{format_ss}\n")
         line_idx += 1
