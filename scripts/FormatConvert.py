@@ -197,19 +197,18 @@ if __name__ == "__main__":
                     turn_beta_flag = check_beta_cols(ss[4]) # 1 means beta, 0 means or and 0 will log or to beta
                 elif v == 7:
                     turn_pvalue_flag = check_pvalue_cols(ss[7]) # 1 means now is -log10p , will turn to p
-            formated_ss = [k for k in column_mapping.keys()]
-
+            format_ss = [k for k in column_mapping.keys()]
 
         else:
             for k, v in column_mapping.items():
                 if v == 4 and turn_beta_flag == 0: # log OR 
-                    formated_ss.append(str(math.log(float(ss[v]))))
+                    format_ss.append(str(math.log(float(ss[v]))))
                 elif v == 7 and turn_pvalue_flag == 1:
-                    formated_ss.append(str(math.pow(10, -float(ss[v]))))
+                    format_ss.append(str(math.pow(10, -float(ss[v]))))
                 else:
-                    formated_ss.append(ss[v])
-        formated_ss = "\t".join(formated_ss)
-        sys.stdout.write(f"{formated_ss}\n")
+                    format_ss.append(ss[v])
+        format_ss = "\t".join(format_ss)
+        sys.stdout.write(f"{format_ss}\n")
         line_idx += 1
             
 
