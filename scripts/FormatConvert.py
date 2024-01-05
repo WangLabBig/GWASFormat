@@ -179,7 +179,9 @@ def check_pvalue_cols(name):
 
 import math 
 
-ID_error_msg = {}
+# ID_error_msg = {}
+USE_VARIANT_ID = False 
+SOME_VARIANT_ID_NA = False
 
 if __name__ == "__main__":
     parser = getParser()
