@@ -162,7 +162,7 @@ def check_beta_cols(name):
     elif name == "or":
         return 0
     else:
-        raise ValueError("beta or or, but now is ": name)
+        raise ValueError("beta or or, but now is :",name)
     
 def check_pvalue_cols(name):
     """
@@ -174,7 +174,7 @@ def check_pvalue_cols(name):
     elif name == "p_value":
         return 0
     else:
-        raise ValueError("minus_log10_p_value or p_value, but now is ": name)
+        raise ValueError("minus_log10_p_value or p_value, but now is :",name)
 
 import math 
 
