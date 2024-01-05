@@ -299,6 +299,7 @@ if __name__ == "__main__":
     # check header and comments
 
     line_idx = 2 if args.no_header else 1 # 2 will drop to find header 
+    header = None
     for line in sys.stdin:
         line = line.strip()  # remove \n
         if line_idx == 1:
