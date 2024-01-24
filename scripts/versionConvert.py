@@ -119,8 +119,21 @@ def getParser():
         Author: Tingfeng Xu (xutingfeng@big.ac.cn)
         Version: 1.0
 
+        ---------------------------------------WARNING---------------------------------------
+        Note that coordinates in the tool are 0-based, so your file should be 0-based 
         This tool allows you to convert genome positions from one build to another using liftover.
+        Currently Positon Systems:
+        one-based:
+            - UCSC: 1-based 
+            - Ensembl: 1-based
+            - plink files: bfile, pfile: 1-based
+            - bgen: 1-based
+            - gwas summary statistics: 1-based for most situations, but plz check! 
+        zero-based:
+            - bed files
+            - 
 
+        ---------------------------------------WARNING---------------------------------------
         By default, input files are assumed to have a header.
 
         -c target source cache
@@ -204,6 +217,7 @@ def getParser():
         action="store_true",
         help="No header and not support for col name in the input",
     )
+    parser.add_argument("-O", "--one-based", help="specific this file is one-based input, so will turn to 0-based")
 
     return parser
 
@@ -282,7 +296,8 @@ if __name__ == "__main__":
             )  # liftover only support 1, 2 ... not chr1 ...
             for each in input_cols[1:]:
                 pos = int(line[each - 1])
-
+                if args.one_based:
+                    pos -= 1
                 try:  # key is ok
                     lifter_res = lifter[chr][pos]
 
@@ -329,7 +344,11 @@ if __name__ == "__main__":
                         # continue
                         line_need_skip = True
                         break
-
+                # upadte pos
+                # if one-based input, then convert output 0-based to 1-based
+                if args.one_based and new_pos != DEFAULT_NA:
+                    new_pos = int(new_pos) + 1
+                # update pos into original cols
                 if not addLast:  # update pos in original cols if not add last
                     line[each - 1] = new_pos
                 else:
