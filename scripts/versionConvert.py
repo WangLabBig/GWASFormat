@@ -118,7 +118,7 @@ def getParser():
 
         Author: Tingfeng Xu (xutingfeng@big.ac.cn)
         Version: 1.0
-
+        Note that coordinates in the tool are 0-based, so your file should be 0-based 
         This tool allows you to convert genome positions from one build to another using liftover.
 
         By default, input files are assumed to have a header.

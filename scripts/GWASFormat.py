@@ -50,6 +50,7 @@ def getParser():
         3. spcific other columns
          cat /pmaster/chenxingyu/chenxy/project/10algorithm/GWAS_summary_statistic/Asthma/v7new_version_file_uniq | ./GWASFormat.py -i 1 3 5 4 7 8 6 9 --other_cols -2 -4
 
+        
         """
         ),
     )
