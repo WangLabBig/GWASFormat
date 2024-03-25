@@ -51,6 +51,11 @@ def getParser():
                This renames the 'variant_id' column and formats it as chr:pos:ref:alt, 
                sorts ref and alt alleles, and adds 'chr' prefix to chr column.
             4. if the format is by GWASFormat then `resetID2.py -i variant_id 1 2 4 3` is ok 
+            
+
+            For Plink Users:
+            1. cat g1000_eur_GRCh38.pvar | resetID2.py -i 1 2 4 5 --add-col new_id | tail -n +2 |awk '{print $3, $6}' > id.map
+            2. plink2 --pfile g1000_eur_GRCh38 --update-name  id.map --make-just-pvar --out g1000_eur_GRCh38  
             """
         ),
     )
@@ -102,6 +107,7 @@ def getParser():
         help="Delimiter for the ID. Default: ':'. This controls the delimiter for the output ID. If `-i` has only one parameter and 'chr' or sorting operations are applied, this delimiter will be used to split the oldID into chr, pos, ref, alt.",
     )
     parser.add_argument('--no-header', dest='no_header', action='store_true', help='Input file has no header.')
+    parser.add_argument('--add-col', dest='add_col',required=False, default=None, help='Add new column for the new ID with --add-col new_ID_name.')
 
     return parser
 
@@ -205,7 +211,7 @@ def header_mapper(string, header_col):
 
 
 def resetID2(
-    line,
+    ss,
     orderList,
     ID_delimter=":",
     header=None,
@@ -213,6 +219,7 @@ def resetID2(
     need_sort=False,
     needChr=False,
     includeOld=False,
+    add_col=False,
 ):
     """
     Reset the ID format in a line based on the specified order and options.
@@ -240,9 +247,8 @@ def resetID2(
         - If needChr is True, the "chr" prefix is added to the chromosome identifier.
         - If includeOld is True, the old ID is included in the new ID.
 
-
+        
     """
-    ss = line.split(delimter)
 
     if len(orderList) == 1:  # only for add chr or sort or do nothing~
         idCol = header_mapper(orderList[0], header) if header else int(orderList[0])
@@ -275,9 +281,12 @@ def resetID2(
         chr = formatChr(chr, not needChr)
     newID = chr + ID_delimter + pos + ID_delimter + stemp[0] + ID_delimter + stemp[1]
     if includeOld:
-        newID = newID + ID_delimter + oldID
+        newID = newID + ID_delimter + oldID if oldID is not None else newID
 
-    ss[idCol - 1] = newID
+    if add_col:
+        ss.append(newID)
+    else: 
+        ss[idCol - 1] = newID
 
     ss = delimter.join(ss) if delimter is not None else "\t".join(ss)
     return ss
@@ -296,6 +305,8 @@ if __name__ == "__main__":
     delimter = args.delimiter
     drop_suffix = args.drop_suffix
     addChr = args.add_chr
+    new_col_name = args.add_col
+    add_col = True if new_col_name else False
     # check header and comments
 
     line_idx = 2 if args.no_header else 1 # 2 will drop to find header 
@@ -307,29 +318,56 @@ if __name__ == "__main__":
         except:
             raise ValueError("if no header, the orderList should be int not str")
 
+    if add_col:
+        if len(orderList) == 4:
+
+            orderList = [ '-1 '] + orderList
+        else:
+            raise ValueError("if add_col is True, the orderList should be 4 not 5")
+        
+
     for line in sys.stdin:
-        line = line.strip()  # remove \n
+
+        current_line = line.strip().split(delimter) if delimter is not None else line.strip().split()
+        if args.no_header and line_idx == 2: 
+            end = len(current_line) + 1 
+
+            if add_col:
+                end += 1
+
+            header = list(range(1, end)) # fake header 
+            orderList = [int(x) for x in orderList]
+
+
         if line_idx == 1:
-            header = line.split(delimter)
+            header = current_line
+ 
+            if add_col:
+                header.append(new_col_name)
 
             # parse order list with col_idx or col_name
             orderList = [header_mapper(x, header) for x in orderList]
+
             if is_sort:
                 idCol = orderList[0]
 
                 if not drop_suffix:
                     header[idCol - 1] = header[idCol - 1] + "_sorted_alleles"
                     
-                ss = (
-                    delimter.join(header) if delimter is not None else "\t".join(header)
-                )
+            #     ss = (
+            #         delimter.join(header) if delimter is not None else "\t".join(header)
+            #     )
 
-            else:
-                ss = line
+            # else:
+            #     ss = header
+            ss = delimter.join(header) if delimter is not None else "\t".join(header)
 
         else:
+            if add_col:
+                current_line.append("")
+
             ss = resetID2(
-                line=line,
+                ss=current_line,
                 orderList=orderList,
                 header=header,
                 ID_delimter=id_delimter,
@@ -338,6 +376,7 @@ if __name__ == "__main__":
                 delimter=delimter,
                 needChr=addChr,
             )
+
         sys.stdout.write(f"{ss}\n")
         line_idx += 1
 

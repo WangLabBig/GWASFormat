@@ -20,7 +20,6 @@ signal(
 )  # prevent IOError: [Errno 32] Broken pipe. If pipe closed by 'head'.
 
 
-
 def formatChr(x, nochr=True):
     """
     Format chromosome identifier.
@@ -58,12 +57,14 @@ def formatChr(x, nochr=True):
     """
     if isinstance(x, int):
         x = str(x)
-
+    if x.startswith("0"):
+        x = x.lstrip("0")
     if nochr:
         x = x.lower()
         # remove chr
         if x.startswith("chr"):
             x = x.lstrip("chr")
+
         # turn x, y, mt => 23, 24, 25
         if x == "x":
             x = "23"
@@ -96,26 +97,6 @@ def getParser():
             Version: 2.0
             This script generates new IDs based on the original ID column. The new ID format is chr:pos:ref:alt by default.
 
-            By default, input files are assumed to have headers.
-            -s sorts the ref and alt alleles using `sorted([ref, alt])`, by default no sorting is applied.
-            -k retains the original ID and appends it after the new ID using `-I/--id-delimter` as a separator (default: ':').
-            -d specifies the delimiter for the input file (default: any whitespace).
-            -I specifies the ID delimiter (default: ':').
-            --add-chr adds 'chr' prefix to the chr column of the ID, preserving or adding 'chr' to IDs.
-
-            **Example:**
-
-            1. Rename the 'variant_id' column: `cat test.txt | resetID2.py -i variant_id 1 2 3 4`
-               This renames the 'variant_id' column to the format: 1:2:3:4 => chr:pos:ref:alt.
-
-            2. Rename and format the 'variant_id' column with sorting and 'chr' prefix:
-               `cat test.txt | resetID2.py -i variant_id 1 2 3 4 -s --add-chr`
-               This renames the 'variant_id' column and formats it as chr:pos:ref:alt, 
-               sorts ref and alt alleles, and adds 'chr' prefix to chr column.
-            3. Rename, format and use '_' as id_delimiter with sorting and 'chr' prefix:
-               `cat test.txt | resetID2.py -i variant_id 1 2 3 4 -I _ -s --add-chr`
-               This renames the 'variant_id' column and formats it as chr:pos:ref:alt, 
-               sorts ref and alt alleles, and adds 'chr' prefix to chr column.
             """
         ),
     )
@@ -154,4 +135,3 @@ if __name__ == "__main__":
 sys.stdout.close()
 sys.stderr.flush()
 sys.stderr.close()
-
