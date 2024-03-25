@@ -223,7 +223,12 @@ def getParser():
         action="store_true",
         help="No header and not support for col name in the input",
     )
-    parser.add_argument("-O", "--one-based", help="specific this file is one-based input, so will turn to 0-based")
+    parser.add_argument(
+        "-O",
+        "--one-based",
+        help="specific this file is one-based input, so will turn to 0-based",
+        action="store_true",
+    )
 
     return parser
 
