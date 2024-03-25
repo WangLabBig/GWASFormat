@@ -369,9 +369,10 @@ if __name__ == "__main__":
                         line.append(new_pos)
                 ss = outputDelimter.join(line)
             except:
-                raise ValueError(
-                    f"Wrong with line: {line}\n while the output of liftover is {lifter_res}"
+                sys.stderr.write(
+                    f"Error with line: {line}\n while the output of liftover is {lifter_res}"
                 )
+                raise
 
         line_idx += 1
         if line_need_skip and not keep_unmapped:
