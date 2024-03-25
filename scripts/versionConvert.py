@@ -307,8 +307,10 @@ if __name__ == "__main__":
                     chr, nochr=True
                 )  # liftover only support 1, 2 ... not chr1 ...
                 for each in input_cols[1:]:
-                    pos = int(line[each - 1])
-                    if args.one_based:
+                    pos = int(line[each - 1])  # zero based input
+                    if (
+                        args.one_based
+                    ):  # if one based input, then minus 1 to convert to 0-based
                         pos -= 1
                     try:  # key is ok
                         lifter_res = lifter[chr][pos]
