@@ -87,6 +87,8 @@ def formatChrLiftover(x, nochr=True):
     """
     if isinstance(x, int):
         x = str(x)
+    if x.startswith("0"):
+        x = x.lstrip("0")
 
     if nochr:
         x = x.lower()
@@ -149,6 +151,10 @@ def getParser():
 
         Convert positions from hg19 to hg38 using a specific chain dir, this will use local cache file as '{target}To{query}.over.chain.gz':
         cat yourfile %prog -c hg19 hg38 chainFilePath -i 1 2 3 4
+
+        For plink2 Users:
+        cat g1000_eur.pvar|  versionConvert.py -i 1 2 -c hg19 hg38 -l | awk '{print $3, $6}' > g1000_eur.map
+        plink2 --pfile g1000_eur --sort-vars --update-map g1000_eur.map --make-pgen --out g1000_eur_GRCh38
         """
         ),
     )
@@ -289,71 +295,76 @@ if __name__ == "__main__":
             ss = outputDelimter.join(header)
 
         else:
-            line = line.split(delimter)
-            chr = line[input_cols[0] - 1]
-            chr = formatChrLiftover(
-                chr, nochr=True
-            )  # liftover only support 1, 2 ... not chr1 ...
-            for each in input_cols[1:]:
-                pos = int(line[each - 1])
-                if args.one_based:
-                    pos -= 1
-                try:  # key is ok
-                    lifter_res = lifter[chr][pos]
+            try:
+                line = line.split(delimter)
+                chr = line[input_cols[0] - 1]
+                chr = formatChrLiftover(
+                    chr, nochr=True
+                )  # liftover only support 1, 2 ... not chr1 ...
+                for each in input_cols[1:]:
+                    pos = int(line[each - 1])
+                    if args.one_based:
+                        pos -= 1
+                    try:  # key is ok
+                        lifter_res = lifter[chr][pos]
 
-                    if len(lifter_res) == 0:  # unmapped
-                        unmapped += 1
+                        if len(lifter_res) == 0:  # unmapped
+                            unmapped += 1
+                            new_pos = DEFAULT_NA
+                            if not keep_unmapped:  # drop if not keep_unmapped
+                                line_need_skip = True
+                                # continue
+                                break
+                        elif len(lifter_res) > 1:  # multiple mapped
+                            new_pos = DEFAULT_NA
+                            multiple += 1
+                            if not keep_unmapped:  # drop if not keep_unmapped
+                                # continue
+                                line_need_skip = True
+                                break
+                        else:
+                            new_chr, new_pos, new_strand = lifter_res[0]
+                            new_pos = str(new_pos)  # int => str
+                            new_chr = formatChrLiftover(
+                                new_chr, nochr=True
+                            )  # remove chr
+
+                            if is_valid_chromosome(
+                                str(new_chr)
+                            ):  # not contig or something else
+                                if new_chr != chr:  # not same chromosome
+                                    notSameChr += 1
+
+                                    if drop:  # drop if not same chromosome
+                                        line_need_skip = True
+                                        break
+                                    else:  # update new chromosome
+                                        line[input_cols[0] - 1] = new_chr
+                            else:  # new chr is a contig or something else which is non default chromosome; will skip
+                                notChr += 1
+                                notChrList.add(new_chr)
+                                line_need_skip = True
+                                break
+
+                    except KeyError:  # key error if not in lifter chain file
+                        key_error += 1
                         new_pos = DEFAULT_NA
                         if not keep_unmapped:  # drop if not keep_unmapped
-                            line_need_skip = True
-                            # continue
-                            break
-                    elif len(lifter_res) > 1:  # multiple mapped
-                        new_pos = DEFAULT_NA
-                        multiple += 1
-                        if not keep_unmapped:  # drop if not keep_unmapped
                             # continue
                             line_need_skip = True
                             break
+                    # upadte pos
+                    # if one-based input, then convert output 0-based to 1-based
+                    if args.one_based and new_pos != DEFAULT_NA:
+                        new_pos = int(new_pos) + 1
+                    # update pos into original cols
+                    if not addLast:  # update pos in original cols if not add last
+                        line[each - 1] = new_pos
                     else:
-                        new_chr, new_pos, new_strand = lifter_res[0]
-                        new_pos = str(new_pos)  # int => str
-                        new_chr = formatChrLiftover(new_chr, nochr=True)  # remove chr
-
-                        if is_valid_chromosome(
-                            str(new_chr)
-                        ):  # not contig or something else
-                            if new_chr != chr:  # not same chromosome
-                                notSameChr += 1
-
-                                if drop:  # drop if not same chromosome
-                                    line_need_skip = True
-                                    break
-                                else:  # update new chromosome
-                                    line[input_cols[0] - 1] = new_chr
-                        else:  # new chr is a contig or something else which is non default chromosome; will skip
-                            notChr += 1
-                            notChrList.add(new_chr)
-                            line_need_skip = True
-                            break
-
-                except KeyError:  # key error if not in lifter chain file
-                    key_error += 1
-                    new_pos = DEFAULT_NA
-                    if not keep_unmapped:  # drop if not keep_unmapped
-                        # continue
-                        line_need_skip = True
-                        break
-                # upadte pos
-                # if one-based input, then convert output 0-based to 1-based
-                if args.one_based and new_pos != DEFAULT_NA:
-                    new_pos = int(new_pos) + 1
-                # update pos into original cols
-                if not addLast:  # update pos in original cols if not add last
-                    line[each - 1] = new_pos
-                else:
-                    line.append(new_pos)
-            ss = outputDelimter.join(line)
+                        line.append(new_pos)
+                ss = outputDelimter.join(line)
+            except:
+                raise ValueError(f"Wrong with line: {line}")
 
         line_idx += 1
         if line_need_skip and not keep_unmapped:
