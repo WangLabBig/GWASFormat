@@ -291,6 +291,7 @@ if __name__ == "__main__":
             else:  # drop suffix
                 newCols = [f"{header[x-1]}" for x in input_cols[1:]]
 
+            header += ["chain_direction"]  # for chain direction
             if addLast:  # add last fo header
                 header += newCols
             else:
@@ -365,11 +366,17 @@ if __name__ == "__main__":
                     if args.one_based and new_pos != DEFAULT_NA:
                         new_pos = int(new_pos) + 1
                     # update pos into original cols
+                    ## add chain direction
+
+                    line.append(new_strand)
                     if not addLast:  # update pos in original cols if not add last
                         line[each - 1] = new_pos
                     else:
                         line.append(new_pos)
-                ss = outputDelimter.join(line)
+
+                ss = outputDelimter.join(
+                    [str(i) if not isinstance(i, str) else i for i in line]
+                )
             except:
                 sys.stderr.write(
                     f"Error with line: {line}\n while the output of liftover is {lifter_res}"
