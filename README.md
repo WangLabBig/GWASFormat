@@ -1,4 +1,17 @@
+
 # GWAS summary file format v0.1
+
+
+
+
+
+## Updated 20241230
+
+`versionConvert.py` change the params of `--one-base` to `--zero-based` as most users's input files are gwas summstats which are one-based, so set this as default.
+
+
+## Main
+
 
 :point_right: [使用流程请点这里](#pipline)
  
