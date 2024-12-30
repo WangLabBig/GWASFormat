@@ -122,19 +122,29 @@ def getParser():
         Version: 1.0
 
         ---------------------------------------WARNING---------------------------------------
-        Note that coordinates in the tool are 0-based, so your file should be 0-based 
+        Note that coordinates of lifterover are 0-based, so coords converted from 1-based to 0-based will do, as we suppose input file is 1-base (for most of gwas summary file). if you are sure the input file is 0-based, then use --zero-based option.
+
         This tool allows you to convert genome positions from one build to another using liftover.
         Currently Positon Systems:
-        one-based:
-            - UCSC: 1-based 
-            - Ensembl: 1-based
-            - plink files: bfile, pfile: 1-based
-            - bgen: 1-based
-            - gwas summary statistics: 1-based for most situations, but plz check! 
-        zero-based:
-            - bed files
-            - 
 
+        Format\tType\tBase
+        UCSC Genome Browser tables\t0-based
+        BED\t0-based
+        BAM\t0-based
+        BCF\t0-based
+        narrowPeak\t0-based
+        SAF\t0-based
+        bedGraph\t0-based
+        UCSC Genome Browser web interface\t1-based
+        GTF\t1-based
+        GFF\t1-based
+        SAM\t1-based
+        VCF\t1-based
+        Wiggle\t1-based
+        GenomicRanges\t1-based
+        IGV\t1-based
+        BLAST\t1-based
+        GenBank/EMBL Feature Table\t1-based
         ---------------------------------------WARNING---------------------------------------
         By default, input files are assumed to have a header.
 
@@ -224,9 +234,9 @@ def getParser():
         help="No header and not support for col name in the input",
     )
     parser.add_argument(
-        "-O",
-        "--one-based",
-        help="specific this file is one-based input, so will turn to 0-based",
+        # "-o",
+        "--zero-based",
+        help="specific this file is zero-based, if file is gwas summary, then do not use this option, otherwise u are sure the file is zero-based",
         action="store_true",
     )
 
@@ -244,6 +254,17 @@ if __name__ == "__main__":
     drop = args.drop_unSameChromosome
     outputDelimter = "\t" if delimter is None else delimter
     no_suffix = args.no_suffix
+
+    if args.zero_based:
+        sys.stderr.write(
+            "Warning: zero-based option is on, so the input file should be zero-based, if not, please turn off this option!\n"
+        )
+        minus_pos = 0
+    else:
+        sys.stderr.write(
+            "Warning: zero-based option is off, so the input file should be one-based (e.g. GWAS Summary Files), if not, please turn on this option!\n"
+        )
+        minus_pos = 1
 
     if len(chain) == 2:
         target, query = chain
@@ -308,11 +329,14 @@ if __name__ == "__main__":
                     chr, nochr=True
                 )  # liftover only support 1, 2 ... not chr1 ...
                 for each in input_cols[1:]:
-                    pos = int(line[each - 1])  # zero based input
-                    if (
-                        args.one_based
-                    ):  # if one based input, then minus 1 to convert to 0-based
-                        pos -= 1
+                    pos = (
+                        int(line[each - 1]) - minus_pos
+                    )  # convert 1-based to 0-based, if input is  1-based, then minus 1 else minus_pos = 0
+                    # if (
+                    #     args.zero_based
+                    # ):  # if one based input, then minus 1 to convert to 0-based
+                    #     pos -= 1
+
                     try:  # key is ok
                         lifter_res = lifter[chr][pos]
 
@@ -363,8 +387,11 @@ if __name__ == "__main__":
                             break
                     # upadte pos
                     # if one-based input, then convert output 0-based to 1-based
-                    if args.one_based and new_pos != DEFAULT_NA:
-                        new_pos = int(new_pos) + 1
+                    # if args.one_based and new_pos != DEFAULT_NA:
+                    #     new_pos = int(new_pos) + 1
+                    new_pos = (
+                        int(new_pos) + minus_pos
+                    )  # convert 0-based to 1-based by adding 1 if input is 1-based, else add 0 if input is 0-based
                     # update pos into original cols
                     ## add chain direction
 
